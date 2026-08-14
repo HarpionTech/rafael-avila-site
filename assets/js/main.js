@@ -699,10 +699,18 @@
        as duas coisas dividiam o mesmo gesto, girar a capa trocava a publicação
        no meio do caminho. */
 
-    /* Um renderer por livro. Quatro contextos WebGL cabem folgados no limite do
-       navegador (16), e cada um desenha sob demanda — em repouso nenhum deles
-       tem loop rodando. */
-    if (window.Book3D) {
+    /* Um renderer por livro, montados SÓ quando a vitrine se aproxima da tela.
+       São cinco contextos WebGL, cinco jogos de textura e cinco lombadas
+       desenhadas em canvas de 1536px. Criados junto com a página, eles disputam
+       a abertura com o cérebro da hero — que é o que a pessoa está de fato
+       olhando nesse momento, e no telefone essa disputa aparece.
+       O limite do navegador é 16 contextos, então os cinco cabem folgados: o
+       custo que se paga aqui é de PARTIDA, não de permanência. Depois de
+       prontos, cada um desenha sob demanda e em repouso nenhum tem loop. */
+    let montados = false;
+    const montaLivros = () => {
+      if (montados || !window.Book3D) return;
+      montados = true;
       $$('[data-book3d]', root).forEach((canvas) => {
         // Índice tirado do item, não da ordem dos canvas: são listas diferentes
         // no momento em que um livro deixar de ter render.
@@ -718,14 +726,31 @@
         });
         if (api) books[i] = api;
       });
-    }
+      show(0);            // reassenta a pose agora que os renderers existem
+    };
 
     show(0);
+
+    if ('IntersectionObserver' in window) {
+      /* 400px de antecedência: dá tempo de compilar shader e subir textura antes
+         de a seção aparecer, então a montagem não é vista. */
+      const olho = new IntersectionObserver((entradas) => {
+        if (!entradas.some((e) => e.isIntersecting)) return;
+        olho.disconnect();
+        montaLivros();
+      }, { rootMargin: '400px 0px' });
+      olho.observe(root);
+    } else {
+      montaLivros();
+    }
 
     /* Fica pendurado para o ScrollTrigger chamar quando a seção entra na tela.
        Só o livro da frente se apresenta: os outros estão invisíveis, e girá-los
        seria gastar GPU em quatro cenas que ninguém vê. */
-    entradaVitrine = () => { if (books[index]) books[index].entrada(); };
+    /* Monta antes de pedir a entrada: se o visitante chegar aqui por link direto
+       (#ebooks), o ScrollTrigger pode disparar junto com o observer, e sem esta
+       chamada o livro da frente não existiria ainda para se apresentar. */
+    entradaVitrine = () => { montaLivros(); if (books[index]) books[index].entrada(); };
   }
 
   /* Lightbox dos depoimentos. O card continua sendo um <a> para a imagem: sem JS
@@ -865,20 +890,20 @@
 
     ['.about-section', '.method-section', '.books-section', '.testimonials-section', '.contact-section'].forEach(revealTitle);
 
-    gsap.from('.about-intro .kicker, .about-intro > p', ent({ opacity: 0, x: -44, duration: .55, stagger: .08, ease: 'power3.out', scrollTrigger: { trigger: '.about-section', start: 'top 78%', once: true } }));
-    gsap.fromTo('.about-portrait', { opacity: 0, scale: 1.08, clipPath: 'inset(10% 14% 8% 4% round 3rem)' }, { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0% round 1.5rem)', duration: 1.05, ease: 'power4.out', clearProps: 'opacity,transform,clipPath', scrollTrigger: { trigger: '.about-grid', start: 'top 74%', once: true } });
+    gsap.from('.about-intro .kicker, .about-intro > p', ent({ opacity: 0, x: -44, duration: .55, stagger: .08, ease: 'power3.out', scrollTrigger: { trigger: '.about-section', start: 'top 78%', once: true, fastScrollEnd: true } }));
+    gsap.fromTo('.about-portrait', { opacity: 0, scale: 1.08, clipPath: 'inset(10% 14% 8% 4% round 3rem)' }, { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0% round 1.5rem)', duration: 1.05, ease: 'power4.out', clearProps: 'opacity,transform,clipPath', scrollTrigger: { trigger: '.about-grid', start: 'top 74%', once: true, fastScrollEnd: true } });
     gsap.from('[data-about-card]', ent({ opacity: 0, x: 120, y: 50, rotation: 3, scale: .96, duration: .92, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.about-grid', start: 'top 68%', once: true, fastScrollEnd: true } }));
-    gsap.from('.about-stats > div', { opacity: 0, y: 18, duration: .42, stagger: .08, ease: 'power3.out', scrollTrigger: { trigger: '[data-about-card]', start: 'top 78%', once: true } });
+    gsap.from('.about-stats > div', { opacity: 0, y: 18, duration: .42, stagger: .08, ease: 'power3.out', scrollTrigger: { trigger: '[data-about-card]', start: 'top 78%', once: true, fastScrollEnd: true } });
 
-    gsap.from('.method-visual', ent({ opacity: 0, x: -110, rotation: -3, scale: .92, duration: .9, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-layout', start: 'top 76%', once: true } }));
+    gsap.from('.method-visual', ent({ opacity: 0, x: -110, rotation: -3, scale: .92, duration: .9, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-layout', start: 'top 76%', once: true, fastScrollEnd: true } }));
     gsap.to('.method-visual img', { yPercent: -7, ease: 'none', scrollTrigger: { trigger: '.method-layout', start: 'top bottom', end: 'bottom top', scrub: .65 } });
-    gsap.from('.life-areas li', { opacity: 0, y: 16, duration: .5, stagger: .07, ease: 'power3.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.life-areas', start: 'top 82%', once: true } });
+    gsap.from('.life-areas li', { opacity: 0, y: 16, duration: .5, stagger: .07, ease: 'power3.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.life-areas', start: 'top 82%', once: true, fastScrollEnd: true } });
     // A régua de cada item é traçada da esquerda para a direita: é o item que
     // "assina" a própria linha, em vez de tudo aparecer inteiro de uma vez.
-    gsap.from('.life-areas__regua', { scaleX: 0, duration: .7, stagger: .07, ease: 'power3.inOut', clearProps: 'transform', scrollTrigger: { trigger: '.life-areas', start: 'top 82%', once: true } });
-    gsap.from('.method-closing', { opacity: 0, y: 18, duration: .6, ease: 'power3.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-closing', start: 'top 88%', once: true } });
-    gsap.from('.method-approach p', ent({ opacity: 0, y: 26, duration: .68, stagger: .12, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-approach', start: 'top 84%', once: true } }));
-    gsap.fromTo('.method-invite', { opacity: 0, y: 30, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: .75, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-invite', start: 'top 88%', once: true } });
+    gsap.from('.life-areas__regua', { scaleX: 0, duration: .7, stagger: .07, ease: 'power3.inOut', clearProps: 'transform', scrollTrigger: { trigger: '.life-areas', start: 'top 82%', once: true, fastScrollEnd: true } });
+    gsap.from('.method-closing', { opacity: 0, y: 18, duration: .6, ease: 'power3.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-closing', start: 'top 88%', once: true, fastScrollEnd: true } });
+    gsap.from('.method-approach p', ent({ opacity: 0, y: 26, duration: .68, stagger: .12, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-approach', start: 'top 84%', once: true, fastScrollEnd: true } }));
+    gsap.fromTo('.method-invite', { opacity: 0, y: 30, scale: .97 }, { opacity: 1, y: 0, scale: 1, duration: .75, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-invite', start: 'top 88%', once: true, fastScrollEnd: true } });
 
     gsap.from('.method-steps li', ent({ opacity: 0, x: 120, duration: .68, stagger: .1, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-steps', start: 'top 82%', once: true, fastScrollEnd: true } }));
 
@@ -891,14 +916,38 @@
       trigger: '.showcase', start: 'top 72%', once: true,
       onEnter: () => { if (typeof entradaVitrine === 'function') entradaVitrine(); }
     });
-    gsap.from('.showcase__panel', ent({ opacity: 0, x: 90, y: 24, duration: .85, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.showcase', start: 'top 72%', once: true } }));
-    gsap.from('.showcase__nav', { opacity: 0, y: 22, duration: .6, ease: 'power3.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.showcase', start: 'top 62%', once: true } });
+    gsap.from('.showcase__panel', ent({ opacity: 0, x: 90, y: 24, duration: .85, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.showcase', start: 'top 72%', once: true, fastScrollEnd: true } }));
+    gsap.from('.showcase__nav', { opacity: 0, y: 22, duration: .6, ease: 'power3.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.showcase', start: 'top 62%', once: true, fastScrollEnd: true } });
 
 
     /* Grade, nao mais faixa: deslizar 240px na horizontal jogava os cards
        para fora da coluna. Sobe curto, com cascata. */
     gsap.from('.testimonial-card', ent({ opacity: 0, y: 40, scale: .96, duration: .68, stagger: .07, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.testimonial-grid', start: 'top 84%', once: true, fastScrollEnd: true } }));
-    gsap.from('.contact-copy .kicker, .contact-copy > p:last-child', ent({ opacity: 0, x: -54, duration: .55, stagger: .1, ease: 'power3.out', scrollTrigger: { trigger: '.contact-section', start: 'top 76%', once: true } }));
+    /* Dica de arrasto no trilho dos depoimentos.
+       No telefone a lista deita e vira carrossel; a única pista de que ela anda
+       é a fatia do próximo card na borda, e fatia sozinha não ensina gesto. Um
+       empurrão curto e a volta mostram o movimento uma vez.
+       Quem decide se roda é o DOM, não uma media query: só existe trilho quando
+       o conteúdo é mais largo que a caixa. No desktop a lista é grade e a
+       condição é falsa sozinha.
+       O snap é desligado durante a dica — com `mandatory` ligado ele briga com
+       a rolagem programada e o empurrão sai aos trancos. */
+    const trilho = $('.testimonial-grid');
+    if (trilho) {
+      ScrollTrigger.create({
+        trigger: trilho, start: 'top 80%', once: true,
+        onEnter: () => {
+          if (trilho.scrollWidth <= trilho.clientWidth + 4) return;
+          const snap = trilho.style.scrollSnapType;
+          trilho.style.scrollSnapType = 'none';
+          gsap.timeline({ onComplete: () => { trilho.style.scrollSnapType = snap; } })
+            .to(trilho, { scrollLeft: 34, duration: .42, ease: 'power2.out' })
+            .to(trilho, { scrollLeft: 0, duration: .58, ease: 'power2.inOut' }, '+=.14');
+        }
+      });
+    }
+
+    gsap.from('.contact-copy .kicker, .contact-copy > p:last-child', ent({ opacity: 0, x: -54, duration: .55, stagger: .1, ease: 'power3.out', scrollTrigger: { trigger: '.contact-section', start: 'top 76%', once: true, fastScrollEnd: true } }));
     gsap.from('.contact-channel', ent({ opacity: 0, x: 120, y: 34, rotation: 2, duration: .7, stagger: .12, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.contact-channels', start: 'top 84%', once: true, fastScrollEnd: true } }));
     addEventListener('load', () => window.ScrollTrigger.refresh(), { once: true });
   }

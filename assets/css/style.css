@@ -813,7 +813,11 @@ body.esta-carregando { overflow: hidden; }
   background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(8,8,10,.72), transparent 72%);
   pointer-events: none;
 }
-.showcase__arrow { display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: var(--white); cursor: pointer; }
+.showcase__arrow { display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: var(--white); cursor: pointer; transition: transform .16s ease; }
+/* Confirmação de toque. No desktop o hover já avisa que o controle respondeu;
+   no telefone não existe hover, e o único retorno de um toque na seta era o
+   livro começar a girar — que leva quase um segundo para ser percebido. */
+.showcase__arrow:active { transform: scale(.9); }
 .showcase__arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 /* SVG e não "←": o glifo de seta herda as métricas da fonte e nunca fica
    opticamente centrado no círculo — sempre sobra folga de um lado. */
@@ -866,6 +870,9 @@ body.esta-carregando { overflow: hidden; }
   }
   [data-showcase-prev] { left: 0; }
   [data-showcase-next] { right: 0; }
+  /* Recompõe o afundamento com a centralização: aqui o transform já carrega o
+     translateY, e uma escala solta jogaria a seta de volta para o topo. */
+  .showcase__arrow:active { transform: translateY(-50%) scale(.9); }
   .method-steps--row { grid-template-columns: 1fr 1fr; }
   /* Empilhado, o painel desce do fundo escuro da parede para a altura do
      assoalho aceso do cenário. Vidro translúcido sobre superfície CLARA continua
