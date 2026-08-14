@@ -746,6 +746,9 @@
 
   let introHero = null;
   let entradaVitrine = null;
+  /* Liberado pelo preloader quando a cortina sai: o livro da hero fica parado na
+     capa enquanto ela estiver no ar. */
+  let girarHeroLivro = null;
 
   function setupMotion() {
     if (!window.gsap || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -890,6 +893,8 @@
     const solta = () => {
       document.body.classList.remove('esta-carregando');
       cortina.remove();
+      // Só agora o livro começa a girar: até aqui ele espera de capa para a frente.
+      if (girarHeroLivro) girarHeroLivro();
     };
 
     let saiu = false;
@@ -966,6 +971,31 @@
       razao: livro.razao,
       espessura: livro.espessura
     });
+    if (!api) return null;
+
+    /* Uma volta a cada ~20s: devagar o bastante para não disputar atenção com a
+       manchete, e ainda assim mostrar lombada e contracapa a quem ficar olhando.
+       O arrasto continua funcionando por cima — o giro é somado, não exclusivo. */
+    const VOLTA = (Math.PI * 2) / (20 * 60);
+    const reduzido = matchMedia('(prefers-reduced-motion: reduce)');
+    let naTela = true;
+    /* Com cortina, o giro só começa quando ela sai. Girando por baixo dela, o
+       livro chegava de costas na abertura — a capa é o que precisa estar de
+       frente no instante em que a página aparece. */
+    let liberado = !$('[data-preloader]');
+
+    const aplica = () => api.girar(naTela && liberado && !reduzido.matches ? VOLTA : 0);
+    girarHeroLivro = () => { liberado = true; aplica(); };
+    reduzido.addEventListener?.('change', aplica);
+
+    /* Fora da tela o giro para. Não é economia teórica: é o único rAF que rodaria
+       o tempo todo na página, e a hero fica no topo — a pessoa passa o resto da
+       visita com ele fora de vista. */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(([e]) => { naTela = e.isIntersecting; aplica(); },
+        { threshold: 0 }).observe(canvas);
+    }
+    aplica();
     return api;
   }
 

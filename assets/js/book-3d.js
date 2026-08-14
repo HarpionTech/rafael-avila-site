@@ -343,6 +343,11 @@
     let raf = 0;
     let dragging = false;
     let velocity = 0;
+    /* Giro permanente, somado por cima do arrasto. Separado de `velocity` porque
+       aquela sofre atrito a cada quadro — é o embalo de um arremesso, feito para
+       morrer. Este não morre. */
+    let giroContinuo = 0;
+    let ultimoQuadro = 0;
 
     function resize() {
       /* Supersampling: desenha acima do tamanho em tela e deixa o navegador
@@ -377,10 +382,20 @@
 
     /* Só existe loop quando há movimento. Ao parar, o rAF é cancelado e o canvas
        fica com o último frame desenhado. */
-    function glide() {
+    function glide(agora) {
       raf = 0;
-      if (dragging || Math.abs(velocity) < 0.0006) { draw(); return; }
-      rotX += velocity;
+      if (dragging || (Math.abs(velocity) < 0.0006 && !giroContinuo)) {
+        ultimoQuadro = 0;
+        draw();
+        return;
+      }
+      /* O giro contínuo anda por TEMPO, não por quadro: em tela de 120Hz o
+         livro daria duas voltas no tempo de uma. O teto de 3 evita um salto
+         quando a aba volta do segundo plano. O arremesso continua por quadro,
+         que é como o atrito dele já estava calibrado. */
+      const dt = ultimoQuadro ? Math.min((agora - ultimoQuadro) / 16.667, 3) : 1;
+      ultimoQuadro = agora;
+      rotX += velocity + giroContinuo * dt;
       velocity *= 0.93;
       draw();
       raf = requestAnimationFrame(glide);
@@ -525,6 +540,11 @@
         requestAnimationFrame(step);
       },
       spin(amount) { velocity = amount; kick(); },
+
+      /* Giro permanente. `girar(0)` para — e parar de verdade importa: sem giro
+         e sem embalo o rAF é cancelado, então o livro fora da tela não custa
+         quadro nenhum. */
+      girar(v) { giroContinuo = v || 0; if (giroContinuo) kick(); },
 
       /* Entrada: o livro chega girando de perfil até a pose de repouso. Roda a
          partir de `rotX` e não de um valor fixo, então serve tanto para o livro
