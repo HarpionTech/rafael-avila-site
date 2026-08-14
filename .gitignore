@@ -1,7 +1,26 @@
 .planning/
 
+# Tudo que o build cospe para conferencia visual segue o prefixo _: telas de
+# responsivo, sobreposicoes de --debug do rectify, recortes de icone.
+build/_*
+__pycache__/
+
+# Fontes 3D cruas do Meshy, 268 MB somadas. Nao entram por dois motivos: a de
+# 172 MB estoura o limite rigido de 100 MB por arquivo do GitHub, e nenhuma das
+# duas e insumo de nada — a malha do cerebro ja esta assada em
+# assets/cerebro/*.bin e os livros sao gerados por codigo em book-3d.js.
+# Se um dia precisarem ser versionadas, o caminho e Git LFS.
+*.blend
+*.blend[0-9]
+
 node_modules/
 .DS_Store
 Thumbs.db
 desktop.ini
 *.log
+*.bak
+
+# Cadernos de trabalho: briefing, links, decisoes em aberto e notas para o
+# Rafael. Sao insumo do site, nao entregavel — nao vao para repositorio publico.
+contato.md
+textos_pra_colocar.md
