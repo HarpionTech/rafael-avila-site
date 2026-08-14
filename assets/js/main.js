@@ -73,7 +73,6 @@
           </figure>
 
           <article class="about-glass glass-panel" data-about-card>
-            <p class="glass-label">Método 3A · atendimento individual</p>
             <h3>${esc(C.marca.nome)}</h3>
             <p class="about-role">${esc(C.marca.titulo)}</p>
             <p>${esc(data.bio)}</p>
