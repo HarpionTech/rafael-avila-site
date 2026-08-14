@@ -2,7 +2,9 @@
 window.CONFIG = {
   marca: {
     nome: 'Rafael Ávila',
-    titulo: 'Terapeuta comportamental · Autor',
+    // Assina o rodape e a linha de papel do bloco Sobre. Um lugar so: eram
+    // dois campos com a mesma frase, e divergiriam na primeira revisao.
+    titulo: 'Terapeuta, mentor, palestrante e autor do livro Bem-vindo ao Mundo Real',
     instagram: 'https://www.instagram.com/rafa.aviila/',
     arroba: '@rafa.aviila'
   },
@@ -14,9 +16,9 @@ window.CONFIG = {
 
   sobre: {
     eyebrow: 'Sobre Rafael',
-    titulo: 'Método, presença e aplicação no mundo real.',
-    bio: 'Rafael trabalha com Terapia Cognitivo-Comportamental, neurociência e análise do comportamento. Sua proposta é investigar o contexto, reconhecer a função dos padrões e construir respostas que possam ser praticadas na rotina.',
-    complemento: 'Criador do Método 3A da Autoperformance e do Tripé dos Relacionamentos Saudáveis, transforma conceitos complexos em decisões mais claras e aplicáveis.',
+    titulo: 'Um processo terapêutico breve, prático e objetivo.',
+    bio: 'Rafael conduz um processo terapêutico individualizado, com uma abordagem prática, objetiva e voltada para a realidade de cada pessoa. O trabalho busca compreender o contexto, identificar padrões de pensamento, emoções e comportamentos e, a partir disso, desenvolver novas formas de lidar com os desafios da vida.',
+    complemento: 'Criador de métodos e ferramentas voltados ao desenvolvimento pessoal e às relações humanas, Rafael transforma conhecimentos em reflexões práticas, favorecendo mais clareza, consciência e autonomia para que cada pessoa possa fazer escolhas mais alinhadas com a vida que deseja construir.',
     imagem: 'assets/perfil.png',
     imagemAlt: 'Retrato de Rafael Ávila',
     destaques: [
@@ -28,7 +30,7 @@ window.CONFIG = {
 
   metodo: {
     eyebrow: 'Terapia online',
-    titulo: 'Cinco áreas da vida, um processo só.',
+    titulo: 'Todas as áreas da sua vida trabalhadas em um único processo.',
     intro: 'A terapia tem como objetivo ajudar você a construir uma vida mais equilibrada e satisfatória. Muitas vezes o sofrimento emocional não nasce de um problema específico, mas do desequilíbrio entre as cinco áreas que influenciam diretamente o seu bem-estar — e por isso trabalhamos todas elas juntas.',
     areas: [
       { nome: 'Vida familiar', desc: 'Relações, apoio e convivência.' },
@@ -38,7 +40,7 @@ window.CONFIG = {
       { nome: 'Vida pessoal', desc: 'Autoconhecimento, autoestima e autocuidado.' }
     ],
     fecho: 'Durante as sessões buscamos compreender os padrões de pensamento, emoção e comportamento que podem estar por trás de ansiedade, insegurança, baixa autoestima, conflitos nos relacionamentos, desmotivação ou sensação de estagnação.',
-    abordagem: 'A partir de uma abordagem baseada na psicologia comportamental e na Terapia Cognitivo-Comportamental, o objetivo é desenvolver mais autoconhecimento, autoconfiança, inteligência emocional e habilidades práticas para lidar com os desafios da vida de forma mais saudável.',
+    abordagem: 'A partir de abordagens comportamentais, o objetivo é desenvolver mais autoconhecimento, autoconfiança, inteligência emocional e habilidades práticas para lidar com os desafios da vida de forma mais saudável.',
     alem: 'A terapia não serve apenas para resolver problemas. Ela também fortalece aquilo que já funciona, promove crescimento pessoal e ajuda você a construir uma vida mais alinhada com seus valores, objetivos e propósito.',
     convite: 'Deseja iniciar esse processo e dar o primeiro passo em direção a uma vida mais equilibrada?',
     imagem: 'assets/terapia-online.jpg',
@@ -53,13 +55,63 @@ window.CONFIG = {
 
   publicacoes: {
     eyebrow: 'Publicações',
-    titulo: 'Cinco livros para começar.',
+    titulo: 'Livros publicados por Rafael Ávila.',
     intro: 'Arraste o livro para girá-lo',
     sck: 'lp|ebooks',
+    /* Vantagem do formato digital, compartilhada pelos quatro e-books.
+       Fica no nivel da secao porque e a mesma frase para todos: repetida
+       item a item, divergiria na primeira revisao. */
+    seloDigital: { icone: 'raio', titulo: 'Acesso imediato', desc: 'Link na hora da compra' },
     itens: [
       {
-        id: 'mentalidade',
+        id: 'mundo-real',
         numero: '01',
+        titulo: 'Bem-vindo ao Mundo Real',
+        descricao: 'Um convite para abandonar as ilusões, aceitar a realidade como ela é e assumir o controle daquilo que realmente depende de você. Viver no mundo real não significa desistir dos seus sonhos — significa aprender a construí-los com equilíbrio, maturidade e coragem.',
+        detalhes: ['A Gangorra do Extremismo', 'As três fases da mudança: aceitação, adaptação e reestruturação', 'As cinco esferas da vida, do familiar ao pessoal'],
+        preco: 'R$ 39,90',
+        capa: 'assets/livros/3d-mundo-real.webp',
+        textura: 'assets/frente do livro fisico.jpeg',
+        contracapa: 'assets/capa do livro fisico.jpeg',
+        // Lombada escrita, não fotografada: a arte impressa é texto sobre preto,
+        // e desenhar sai nítido em qualquer tamanho. `selo` é o nome da editora
+        // em texto — quando o logotipo da Âncora existir em arquivo, entra aqui.
+        lombadaTexto: {
+          fundo: '#0a0a0b',
+          corAutor: '#c9a05c',      // dourado, como no impresso
+          corTitulo: '#f4f1ea',
+          autor: 'RAFAEL ÁVILA',
+          titulo: 'BEM-VINDO AO MUNDO REAL',
+          // Logotipo real da editora, recortado no próprio contorno.
+          seloImagem: 'assets/icones/ancora-editora.webp'
+        },
+        razao: 1.40,
+        espessura: 0.16,
+        capaAlt: 'Capa do livro Bem-vindo ao Mundo Real',
+        contracapaAlt: 'Contracapa do livro Bem-vindo ao Mundo Real',
+        link: 'https://hotmart.com/pt-br/marketplace/produtos/bem-vindo-ao-mundo-real/W107095695P',
+        // Único título com etiqueta: é o lançamento, e o único que existe em papel.
+        etiqueta: 'Lançamento',
+        /* Duas versões do mesmo livro. Com `formatos`, o card troca o botão único
+           por um par — e um formato sem link sai desabilitado em vez de sumir,
+           para a existência da versão já ser anunciada antes de estar à venda. */
+        formatos: [
+          // URLs CRUAS: o `sck` de origem é colado por hotmartLink(). O link do
+          // digital chega do contato.md já com `?sck=lp|ebooks`; guardá-lo assim
+          // duplicaria o parâmetro na saída.
+          { rotulo: 'Físico', link: 'https://hotmart.com/pt-br/marketplace/produtos/bem-vindo-ao-mundo-real/W107095695P',
+            /* Sem prazo em dias: o envio é da editora pela Hotmart, e um número
+               aqui vira promessa que a página não controla. Quando o Rafael
+               confirmar o prazo real, entra no lugar de `titulo`. */
+            selo: { icone: 'caminhao', titulo: 'Enviado para todo o Brasil', desc: 'Livro impresso · Âncora Editora' } },
+          { rotulo: 'Digital', link: 'https://hotmart.com/pt-br/marketplace/produtos/hagsxd-bem-vindo-ao-mundo-real-m2oxk/G107096153I',
+            selo: { icone: 'raio', titulo: 'Acesso imediato', desc: 'Link na hora da compra' } }
+        ],
+        disponivel: true
+      },
+      {
+        id: 'mentalidade',
+        numero: '02',
         titulo: 'Mentalidade Blindada',
         descricao: 'Por que algumas pessoas mantêm o foco e seguem avançando diante das dificuldades, enquanto outras desistem nos primeiros obstáculos? A resposta não está na sorte, no talento ou na inteligência — está na forma como pensam e respondem aos desafios. Aqui Rafael apresenta o Método 3A da Autoperformance.',
         detalhes: ['Autorresponsabilidade: assumir o controle das escolhas', 'Automotivação: direcionar os motivos por trás do comportamento', 'Autoconfiança: construída em ação e aprendizado, não em frases positivas', 'Exercícios para aplicar o Método 3A imediatamente'],
@@ -77,7 +129,7 @@ window.CONFIG = {
       },
       {
         id: 'relacionamentos',
-        numero: '02',
+        numero: '03',
         titulo: 'O Segredo dos Relacionamentos Saudáveis',
         descricao: 'Por que alguns relacionamentos duram a vida toda e outros acabam mesmo quando ainda existe amor? O Tripé dos Relacionamentos Saudáveis é a metodologia que Rafael desenvolveu para mostrar os pilares que sustentam um vínculo duradouro.',
         detalhes: ['Respeito, comunicação e transparência: os três pilares', 'Como identificar os sinais de que a relação enfraqueceu', 'Limites saudáveis e comunicação mais madura', 'Exemplos práticos e exercícios de reflexão'],
@@ -104,7 +156,7 @@ window.CONFIG = {
       },
       {
         id: 'autoterapia',
-        numero: '03',
+        numero: '04',
         titulo: 'Autoterapia',
         descricao: 'Uma abordagem para analisar sua vida pessoal, familiar, amorosa, profissional e social a partir da Teoria da Vida Plena.',
         detalhes: ['Baseado na Teoria da Vida Plena', 'Cinco áreas da vida', 'Autoanálise guiada'],
@@ -130,7 +182,7 @@ window.CONFIG = {
       },
       {
         id: 'autoconfianca',
-        numero: '04',
+        numero: '05',
         titulo: 'Autoconfiança: Pare de se Diminuir',
         descricao: 'Você sente que poderia se posicionar melhor, mas se cala, busca aprovação ou evita conflitos por medo do julgamento? Rafael apresenta aqui a Imponência Pessoal: a ideia de que autoconfiança não é só um traço com que se nasce — ela se desenvolve por comportamento, experiência e treino.',
         detalhes: ['Imponência posicional × imponência pessoal', 'Postura, comunicação e contato visual', 'Dizer não sem culpa e lidar com críticas', 'Exercícios e desafios práticos'],
@@ -152,35 +204,6 @@ window.CONFIG = {
         espessura: 0.16,
         capaAlt: 'Capa do e-book Autoconfiança: Pare de se Diminuir',
         link: 'https://hotmart.com/pt-br/marketplace/produtos/autoconfianca-pare-de-se-diminuir/I107140439F',
-        disponivel: true
-      },
-      {
-        id: 'mundo-real',
-        numero: '05',
-        titulo: 'Bem-vindo ao Mundo Real',
-        descricao: 'Um convite para abandonar as ilusões, aceitar a realidade como ela é e assumir o controle daquilo que realmente depende de você. Viver no mundo real não significa desistir dos seus sonhos — significa aprender a construí-los com equilíbrio, maturidade e coragem.',
-        detalhes: ['A Gangorra do Extremismo', 'As três fases da mudança: aceitação, adaptação e reestruturação', 'As cinco esferas da vida, do familiar ao pessoal'],
-        preco: 'R$ 39,90',
-        capa: 'assets/livros/3d-mundo-real.webp',
-        textura: 'assets/frente do livro fisico.jpeg',
-        contracapa: 'assets/capa do livro fisico.jpeg',
-        // Lombada escrita, não fotografada: a arte impressa é texto sobre preto,
-        // e desenhar sai nítido em qualquer tamanho. `selo` é o nome da editora
-        // em texto — quando o logotipo da Âncora existir em arquivo, entra aqui.
-        lombadaTexto: {
-          fundo: '#0a0a0b',
-          corAutor: '#c9a05c',      // dourado, como no impresso
-          corTitulo: '#f4f1ea',
-          autor: 'RAFAEL ÁVILA',
-          titulo: 'BEM-VINDO AO MUNDO REAL',
-          // Logotipo real da editora, recortado no próprio contorno.
-          seloImagem: 'assets/icones/ancora-editora.webp'
-        },
-        razao: 1.40,
-        espessura: 0.16,
-        capaAlt: 'Capa do livro Bem-vindo ao Mundo Real',
-        contracapaAlt: 'Contracapa do livro Bem-vindo ao Mundo Real',
-        link: 'https://hotmart.com/pt-br/marketplace/produtos/bem-vindo-ao-mundo-real/W107095695P',
         disponivel: true
       }
     ]

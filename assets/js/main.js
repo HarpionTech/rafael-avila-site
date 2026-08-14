@@ -17,6 +17,46 @@
     return sck ? `${base}${base.includes('?') ? '&' : '?'}sck=${encodeURIComponent(sck)}` : base;
   }
 
+  /* Ícones cheios, com os vazados feitos por `evenodd` — rodas e janela são
+     buracos de verdade, não círculos pintados da cor do fundo: o card tem
+     degradê atrás, e cor chapada apareceria como remendo.
+     O alfiler entra em tom mais claro sobre o baú, e o topo do baú tem o V onde
+     ele encaixa: é o que faz o desenho ler como entrega, e não como caminhão. */
+  const ICONES = {
+    caminhao:
+      '<path fill-rule="evenodd" d="M1.5 8.1h3.9l1.9 2.4 1.9-2.4h4v8.7H1.5V8.1Z'
+      + 'M13.3 10.3h4.6l3.7 3.7v2.8h-8.3v-6.5Zm1.9 1.4v2.3h4.1l-2.3-2.3h-1.8Z'
+      + 'M6.2 15.6a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Zm0 1.7a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z'
+      + 'M17.6 15.6a2.7 2.7 0 1 1 0 5.4 2.7 2.7 0 0 1 0-5.4Zm0 1.7a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/>'
+      // Alfinete em vermelho, o mesmo da fita de lançamento: é a cor que a página
+      // reservou para "isto é novo", e repeti-la aqui amarra os dois sinais.
+      + '<path fill-rule="evenodd" fill="#e5392a" d="M7.3 1.1a3.7 3.7 0 0 0-3.7 3.7c0 2.8 3.7 6.6 3.7 6.6'
+      + 's3.7-3.8 3.7-6.6a3.7 3.7 0 0 0-3.7-3.7Zm0 2.2a1.5 1.5 0 1 1 0 3.1 1.5 1.5 0 0 1 0-3.1Z"/>',
+    raio: '<path d="M13.4 1.8 4.6 13.4h5.2l-1 8.8 8.8-11.7h-5.2z"/>'
+  };
+
+  /* Oferta = um selo mais o seu botão, na mesma coluna.
+     O par existe para a escolha se explicar sozinha: ao lado de "Físico" está o
+     que só o físico tem, ao lado de "Digital" o que só o digital tem. Livro com
+     dois formatos rende duas colunas; e-book rende uma, com o selo padrão da
+     seção — assim nenhum card fica sem a vantagem do seu formato. */
+  const ofertas = (book) => {
+    const lista = book.formatos || [{
+      rotulo: 'Ver detalhes', link: book.link, selo: C.publicacoes.seloDigital
+    }];
+    const coluna = (f) => `
+      <div class="oferta">
+        ${f.selo ? `<p class="oferta__selo">
+          <svg viewBox="0 0 24 24" aria-hidden="true">${ICONES[f.selo.icone] || ''}</svg>
+          <span><b>${esc(f.selo.titulo)}</b><i>${esc(f.selo.desc)}</i></span>
+        </p>` : ''}
+        ${f.link
+          ? `<a class="liquid-button liquid-button-bronze" href="${esc(hotmartLink(f.link))}" target="_blank" rel="noopener">${esc(f.rotulo)} <span aria-hidden="true">↗</span></a>`
+          : `<button class="liquid-button liquid-button-light is-disabled" type="button" disabled>${esc(f.rotulo)} · em breve</button>`}
+      </div>`;
+    return `<div class="book-offer${lista.length > 1 ? ' book-offer--duplo' : ''}">${lista.map(coluna).join('')}</div>`;
+  };
+
   const renderers = {
     sobre: (data) => `
       <div class="container">
@@ -113,25 +153,21 @@
                 </div>`).join('')}
             </div>
             <div class="showcase__floor" aria-hidden="true"></div>
-          </div>
 
-          <div class="showcase__panel glass-panel" data-showcase-panel aria-live="polite">
-            ${data.itens.map((book, i) => `
-              <article class="showcase__card${i === 0 ? ' is-active' : ''}" data-showcase-card="${i}">
-                <h3>${esc(book.titulo)}</h3>
-                <p>${esc(book.descricao)}</p>
-                <ul>${book.detalhes.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
-                ${book.disponivel ? `
-                  <div class="book-offer"><a class="liquid-button liquid-button-bronze" href="${esc(hotmartLink(book.link))}" target="_blank" rel="noopener">Ver detalhes <span aria-hidden="true">↗</span></a></div>` : `
-                  <button class="liquid-button liquid-button-light is-disabled" type="button" disabled>Em breve</button>`}
-              </article>`).join('')}
-          </div>
-
-          <div class="showcase__nav">
+            <!-- As setas moram DENTRO do palco, nao na barra. O palco e a caixa
+                 do livro tanto na coluna dupla do desktop quanto empilhado no
+                 telefone, entao ancora-las nele acerta a lateral do livro em
+                 qualquer largura, sem depender de onde a grade quebra. -->
             <button class="showcase__arrow liquid-control" type="button" data-showcase-prev aria-label="Publicação anterior">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 8 12l6.5 7"/></svg>
             </button>
+            <button class="showcase__arrow liquid-control" type="button" data-showcase-next aria-label="Próxima publicação">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5 16 12l-6.5 7"/></svg>
+            </button>
 
+            <!-- Contador na lateral esquerda, na vertical. Embaixo do palco ele
+                 passava por baixo do card em telas medias; aqui ocupa a folga
+                 que sobra ao lado do livro, que nenhum outro elemento usa. -->
             <div class="showcase__pager">
               <span class="showcase__conta"><b data-showcase-atual>01</b><i aria-hidden="true">/</i><em>${String(data.itens.length).padStart(2, '0')}</em></span>
               <ol class="showcase__trilha">
@@ -139,11 +175,22 @@
                   <li><button type="button" data-showcase-ir="${i}" aria-label="Ver ${esc(book.titulo)}"><span></span></button></li>`).join('')}
               </ol>
             </div>
+          </div>
 
-            <button class="showcase__arrow liquid-control" type="button" data-showcase-next aria-label="Próxima publicação">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5 16 12l-6.5 7"/></svg>
-            </button>
+          <div class="showcase__panel glass-panel" data-showcase-panel aria-live="polite">
+            ${data.itens.map((book, i) => `
+              <article class="showcase__card${i === 0 ? ' is-active' : ''}" data-showcase-card="${i}">
+                ${book.etiqueta ? `<p class="showcase__fita"><span>${esc(book.etiqueta)}</span></p>` : ''}
+                <h3>${esc(book.titulo)}</h3>
+                <p>${esc(book.descricao)}</p>
+                <ul>${book.detalhes.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
+                ${!book.disponivel ? `
+                  <button class="liquid-button liquid-button-light is-disabled" type="button" disabled>Em breve</button>`
+                : ofertas(book)}
+              </article>`).join('')}
+          </div>
 
+          <div class="showcase__nav">
             <p class="showcase__hint">${esc(data.intro)}</p>
           </div>
         </div>
@@ -184,10 +231,34 @@
         </div>
       </div>`,
 
+    /* O rodapé espelha a NAVEGAÇÃO DO CABEÇALHO lendo os próprios links dele, em
+       vez de repetir a lista aqui. São a mesma coisa — o mapa da página — e
+       duplicar garantiria que um dia divergissem. O cabeçalho já está no HTML
+       quando render() roda, então a leitura é segura. */
     rodape: (data) => `
       <div class="container footer-inner">
-        <div><strong>${esc(C.marca.nome)}</strong><span>${esc(C.marca.titulo)}</span></div>
-        <nav aria-label="Contatos no rodapé"><a data-wa href="#">WhatsApp</a><a href="${esc(C.marca.instagram)}" target="_blank" rel="noopener">Instagram</a></nav>
+        <div class="footer-marca">
+          <strong>${esc(C.marca.nome)}</strong>
+          <span>${esc(C.marca.titulo)}</span>
+          <a class="liquid-button liquid-button-gold" data-wa href="#">Agendar terapia <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <nav class="footer-col" aria-label="Seções">
+          <h2>Navegar</h2>
+          ${$$('.site-nav a').map((a) => `<a href="${esc(a.getAttribute('href'))}">${esc(a.textContent)}</a>`).join('')}
+        </nav>
+
+        <nav class="footer-col" aria-label="Publicações">
+          <h2>Publicações</h2>
+          ${(C.publicacoes?.itens || []).map((b) => `<a href="${esc(hotmartLink(b.link))}" target="_blank" rel="noopener">${esc(b.titulo)}</a>`).join('')}
+        </nav>
+
+        <nav class="footer-col" aria-label="Contato">
+          <h2>Falar</h2>
+          <a data-wa href="#">WhatsApp</a>
+          <a href="${esc(C.marca.instagram)}" target="_blank" rel="noopener">Instagram · ${esc(C.marca.arroba)}</a>
+        </nav>
+
         <p>${esc(data.copyright)}</p>
       </div>`
   };
@@ -313,160 +384,6 @@
   }
 
   // Para onde a nuvem se inclina em cada etapa (x, y em -1..1).
-  const BRAIN_FOCUS = { thought: [-.5, -.28], emotion: [-.2, .32], action: [.52, -.3] };
-
-  function setupBrain() {
-    const stage = $('[data-brain-stage]');
-    const canvas = $('[data-brain-gl]', stage);
-    const insight = $('.brain-insight');
-    if (!stage || !insight) return;
-    // Nuvem de pontos em WebGL; o render do Blender fica como pôster de fallback.
-    const particleBrain = canvas
-      ? window.Brain3D?.init({ canvas, stage, fallback: $('.brain-render', stage) })
-      : null;
-    const nodes = $$('.brain-node', stage);
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
-    let pinnedNode = null;
-    let currentNode = null;
-    let hideTimer = 0;
-    const content = {
-      thought: { index: '01 · Pensamentos', title: 'O padrão começa antes da ação.', copy: 'Nomear a interpretação muda a forma de responder ao que acontece.' },
-      emotion: { index: '02 · Emoções', title: 'Sentir também informa.', copy: 'Emoções deixam de ser ruído quando são lidas dentro do contexto.' },
-      action: { index: '03 · Comportamentos', title: 'Compreender precisa virar movimento.', copy: 'Mudança sustentável aparece naquilo que pode ser praticado no cotidiano.' }
-    };
-
-    const updateContent = (mode) => {
-      const data = content[mode];
-      if (!data) return;
-      $('[data-brain-index]', insight).textContent = data.index;
-      $('[data-brain-title]', insight).textContent = data.title;
-      $('[data-brain-copy]', insight).textContent = data.copy;
-    };
-
-    const positionInsight = (node) => {
-      if (!finePointer || innerWidth < 760) return;
-      const stageRect = stage.getBoundingClientRect();
-      const nodeRect = node.getBoundingClientRect();
-      const cardWidth = Math.min(330, stageRect.width * .54);
-      const cardHeight = insight.offsetHeight || 168;
-      let left = nodeRect.right - stageRect.left + 22;
-      let top = nodeRect.bottom - stageRect.top + 18;
-      let originX = '0%';
-      let originY = '0%';
-
-      if (left + cardWidth > stageRect.width - 8) {
-        left = nodeRect.left - stageRect.left - cardWidth - 22;
-        originX = '100%';
-      }
-      if (top + cardHeight > stageRect.height - 8) {
-        top = nodeRect.top - stageRect.top - cardHeight - 18;
-        originY = '100%';
-      }
-
-      left = Math.max(8, Math.min(left, stageRect.width - cardWidth - 8));
-      top = Math.max(8, Math.min(top, stageRect.height - cardHeight - 8));
-      insight.style.setProperty('--insight-left', `${left}px`);
-      insight.style.setProperty('--insight-top', `${top}px`);
-      insight.style.setProperty('--insight-origin-x', originX);
-      insight.style.setProperty('--insight-origin-y', originY);
-    };
-
-    const selectNode = (node) => {
-      nodes.forEach((item) => {
-        const selected = item === node;
-        item.classList.toggle('is-active', selected);
-        item.setAttribute('aria-pressed', String(selected));
-      });
-    };
-
-    const reveal = (mode, node, pulse = true) => {
-      const data = content[mode];
-      if (!data) return;
-      clearTimeout(hideTimer);
-      currentNode = node;
-      updateContent(mode);
-      selectNode(node);
-      stage.dataset.brainState = mode;
-      if (pulse) particleBrain?.focus(...(BRAIN_FOCUS[mode] || [0, 0]));
-      positionInsight(node);
-      insight.classList.add('is-visible');
-      insight.setAttribute('aria-hidden', 'false');
-
-      if (window.gsap && !reduce) {
-        window.gsap.killTweensOf(insight);
-        window.gsap.fromTo(insight,
-          { autoAlpha: 0, y: 14, scale: .94, filter: 'blur(8px)' },
-          { autoAlpha: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: .32, ease: 'power3.out', overwrite: 'auto' }
-        );
-      } else {
-        insight.style.opacity = '1';
-        insight.style.visibility = 'visible';
-        insight.style.transform = 'none';
-      }
-    };
-
-    const conceal = (force = false) => {
-      if (pinnedNode && !force) return;
-      clearTimeout(hideTimer);
-      currentNode = null;
-      selectNode(null);
-      stage.dataset.brainState = 'idle';
-      particleBrain?.focus(0, 0);
-      const complete = () => {
-        insight.classList.remove('is-visible');
-        insight.setAttribute('aria-hidden', 'true');
-      };
-      if (window.gsap && !reduce) {
-        window.gsap.killTweensOf(insight);
-        window.gsap.to(insight, { autoAlpha: 0, y: 7, scale: .97, filter: 'blur(5px)', duration: .18, ease: 'power2.in', overwrite: 'auto', onComplete: complete });
-      } else {
-        insight.style.opacity = '0';
-        insight.style.visibility = 'hidden';
-        complete();
-      }
-    };
-
-    const restorePinnedOrHide = (node) => {
-      hideTimer = setTimeout(() => {
-        if (currentNode !== node) return;
-        if (pinnedNode && pinnedNode !== node) reveal(pinnedNode.dataset.brainMode, pinnedNode, false);
-        else if (!pinnedNode) conceal();
-      }, 36);
-    };
-
-    nodes.forEach((node) => {
-      const mode = node.dataset.brainMode;
-      node.addEventListener('pointerenter', () => {
-        if (finePointer) reveal(mode, node);
-      });
-      node.addEventListener('pointerleave', () => {
-        if (finePointer && pinnedNode !== node) restorePinnedOrHide(node);
-      });
-      node.addEventListener('focus', () => reveal(mode, node));
-      node.addEventListener('blur', () => {
-        if (pinnedNode !== node) restorePinnedOrHide(node);
-      });
-      node.addEventListener('click', () => {
-        if (pinnedNode === node) {
-          pinnedNode = null;
-          conceal(true);
-          return;
-        }
-        pinnedNode = node;
-        reveal(mode, node);
-      });
-    });
-
-    stage.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape') return;
-      pinnedNode = null;
-      conceal(true);
-    });
-    addEventListener('resize', () => {
-      if (currentNode) positionInsight(currentNode);
-    }, { passive: true });
-  }
 
   /* Vitrine giratória das publicações.
 
@@ -843,8 +760,7 @@
       .from('.hero-lead', { opacity: 0, y: 28, duration: .55 }, .38)
       .fromTo('.hero-actions .liquid-button', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: .46, clearProps: 'opacity,visibility,transform' }, .48)
       .fromTo('.hero-actions .text-link, .microcopy', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: .42, stagger: .07, clearProps: 'opacity,visibility,transform' }, .54)
-      .fromTo('.brain-node', { autoAlpha: 0, scale: .2 }, { autoAlpha: 1, scale: 1, duration: .46, stagger: .1, ease: 'back.out(2)', clearProps: 'opacity,visibility,transform' }, .62)
-      .from('.brain-hint', { opacity: 0, x: 34, duration: .5 }, .7);
+      .fromTo('.hero-obj', { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: .8, clearProps: 'opacity,visibility,transform' }, .5);
 
     // A linha de varredura saiu quando o cérebro ganhou a onda de ativação: o
     // elemento não existe mais no markup, e o tween em loop só sobrava avisando
@@ -952,69 +868,29 @@
     addEventListener('load', () => window.ScrollTrigger.refresh(), { once: true });
   }
 
-  /* Preloader: a cortina sobe levando o cérebro junto, e ele cai na posição da
-     hero. O cérebro é o MESMO elemento nas duas pontas — o que muda é onde ele
-     está desenhado, não qual objeto é.
+  /* Preloader: a cortina segura a pagina ate o objeto da hero existir e sobe.
 
-     A técnica é FLIP: mede-se antes a caixa natural dele na hero, prende-se em
-     `position: fixed` nessa mesma caixa e usa-se `transform` para levá-lo até o
-     centro da cortina. Animar de volta para transform zero devolve a posição
-     exata do layout, sem número mágico e sem depender do tamanho da tela. */
+     Antes o objeto viajava junto - subia com a cortina e caia na posicao da
+     hero, por FLIP. Isso saiu: a cortina agora e a transicao inteira, e a hero
+     entra por baixo dela pela propria timeline de intro. */
   function setupPreloader() {
     const cortina = $('[data-preloader]');
     if (!cortina) return;
-    const shell = $('.brain-canvas-shell');
-    const canvas = $('[data-brain-gl]');
+    const canvas = $('[data-hero-livro]');
     const marca = $('.preloader__marca', cortina);
-    if (!shell) { cortina.remove(); return; }
+    const luz = $('.preloader__luz', cortina);
+    const topo = $('.preloader__metade--topo', cortina);
+    const base = $('.preloader__metade--base', cortina);
 
     document.body.classList.add('esta-carregando');
     scrollTo(0, 0);
 
     const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const caixa = shell.getBoundingClientRect();
-    /* Sem movimento não há o que coreografar: a cortina só some e a hero entra.
-       Vale também quando o cérebro não tem caixa — aí a escala daria Infinity e
-       o FLIP quebraria. */
-    if (reduzido || !caixa.width || !caixa.height) {
-      cortina.remove();
-      document.body.classList.remove('esta-carregando');
-      if (introHero) introHero.play();
-      return;
-    }
-    const alvo = Math.min(innerHeight * 0.46, 400);
-    const escala = alvo / Math.max(1, caixa.width);
-    const dx = innerWidth / 2 - (caixa.left + caixa.width / 2);
-    // Um pouco acima do meio: é onde o texto embaixo tem ar para respirar.
-    const dy = innerHeight * 0.42 - (caixa.top + caixa.height / 2);
-
-    /* O cérebro sai da árvore da hero e passa a pendurar direto no body.
-       `z-index` sozinho não resolveria: `.brain-stage` tem `isolation: isolate` e
-       `.hero-grid` tem `z-index: 2`, e cada um cria um contexto de empilhamento —
-       lá dentro o cérebro pode pedir 320 que ainda assim fica atrás da cortina.
-       Mover um <canvas> no DOM não perde o contexto WebGL nem o que ele desenhou.
-       Vai para o BODY, e não para dentro da cortina: a cortina é animada, e como
-       filho dele o cérebro herdaria esse transform no meio da queda. */
-    const ninho = shell.parentNode;
-    const irmao = shell.nextSibling;
-    shell.classList.add('no-preloader');
-    shell.style.cssText += `position:fixed;left:${caixa.left}px;top:${caixa.top}px;`
-      + `width:${caixa.width}px;height:${caixa.height}px;margin:0;transform:none;`;
-    document.body.appendChild(shell);
 
     const solta = () => {
-      shell.classList.remove('no-preloader');
-      shell.style.cssText = '';
-      ninho.insertBefore(shell, irmao);      // de volta ao lugar de origem
       document.body.classList.remove('esta-carregando');
       cortina.remove();
     };
-
-    if (!window.gsap || reduzido) {
-      shell.style.transform = `translate(${dx}px, ${dy}px) scale(${escala})`;
-    } else {
-      window.gsap.set(shell, { x: dx, y: dy, scale: escala });
-    }
 
     let saiu = false;
     const sair = () => {
@@ -1027,34 +903,70 @@
         return;
       }
 
+      /* A luz nasce no meio do "Bem-vindo", corre para as duas pontas e a
+         cortina se abre pela fresta que ela deixou.
+         A ordem importa: a luz vai PRIMEIRO e sozinha — é ela que anuncia o
+         corte. O texto só se apaga depois que ela já o atravessou, senão a
+         palavra some antes de a luz ter o que cortar. As metades só partem
+         quando a luz chegou às bordas; abrir antes entregaria que a fresta e a
+         abertura são duas coisas separadas em vez de uma consequência da outra. */
       const tl = window.gsap.timeline({ onComplete: solta });
-      tl.to(marca, { opacity: 0, y: -14, duration: .38, ease: 'power2.in' })
-        // A hero entra junto com a cortina subindo, não depois dela sair.
-        .add(() => { if (introHero) introHero.play(); }, .35)
-        // Sobe levando a cortina junto: os dois partem no mesmo instante, e é
-        // isso que dá a leitura de que o cérebro é quem puxa a transição.
-        .to(shell, { y: dy - innerHeight * 0.16, duration: .8, ease: 'power2.out' }, 0)
-        .to(cortina, { yPercent: -100, duration: .95, ease: 'power3.inOut' }, .18)
-        // Queda com ease de ENTRADA: acelerando, que é como cai o que tem peso.
-        .to(shell, { x: 0, y: 0, scale: 1, duration: .78, ease: 'power2.in' }, .62)
-        // Impacto: achata e volta. Sem isto a queda para seca e denuncia que é
-        // interpolação, não massa.
-        .to(shell, { scaleX: 1.05, scaleY: .95, duration: .12, ease: 'power2.out' })
-        .to(shell, { scaleX: 1, scaleY: 1, duration: .55, ease: 'elastic.out(1, .45)' });
+      tl.fromTo(luz, { scaleX: 0, opacity: 1 },
+                     { scaleX: 1, duration: .78, ease: 'power3.inOut' })
+        /* A hero começa a entrar ANTES de a fresta abrir. A fresta mostra o que
+           está atrás, e se o conteúdo ainda estivesse em opacidade zero ela
+           revelaria uma página vazia — o mesmo vazio que o fundo do contêiner
+           causava, só que por outro motivo. */
+        .add(() => { if (introHero) introHero.play(); }, .5)
+        /* O texto só se apaga DEPOIS que a luz o atravessou. Apagando antes, a
+           palavra sumia e a luz ficava cortando o nada — e é o corte no meio do
+           "Bem-vindo" que dá sentido ao movimento. */
+        .to(marca, { opacity: 0, duration: .38, ease: 'power2.in' }, .62)
+        .to(topo, { yPercent: -100, duration: 1.05, ease: 'power3.inOut' }, .68)
+        .to(base, { yPercent: 100, duration: 1.05, ease: 'power3.inOut' }, .68)
+        // A luz se apaga enquanto as metades abrem: cumpriu o papel, e mantê-la
+        // acesa deixaria um risco atravessando a hero já visível.
+        .to(luz, { opacity: 0, duration: .55, ease: 'power2.out' }, .92);
     };
 
-    /* Quem manda é o cérebro, o asset mais pesado; o teto evita a página presa se
-       algo falhar. O piso deixou de ser só anti-flash: 4s é tempo de leitura, o
-       bastante para o "Bem-vindo" ser lido antes de a cortina subir. Vale
-       lembrar que ele é PISO, não espera fixa — numa visita com tudo em cache o
-       cérebro fica pronto em milissegundos e a cortina segura assim mesmo. */
-    const piso = new Promise((r) => setTimeout(r, 4000));
-    const cerebro = new Promise((r) => {
+    /* Quem manda e o objeto da hero, o asset mais pesado; o teto evita a pagina
+       presa se algo falhar.
+       O piso e 2,5s: tempo de ler "Bem-vindo" e ver a luz nascer, sem que a
+       espera vire pedagio. Somando a coreografia de saida, sao ~4s ate a hero
+       inteira - que e onde os 4s de piso anteriores ja estavam colocando so a
+       cortina. Vale lembrar que ele e PISO, nao espera fixa: numa visita com
+       tudo em cache o livro fica pronto em milissegundos e o piso e quem manda;
+       numa conexao ruim quem manda e o livro. */
+    const piso = new Promise((r) => setTimeout(r, 2500));
+    const objeto = new Promise((r) => {
       if (!canvas || canvas.classList.contains('is-ready')) { r(); return; }
-      canvas.addEventListener('cerebro:pronto', r, { once: true });
+      canvas.addEventListener('livro:pronto', r, { once: true });
     });
     const teto = new Promise((r) => setTimeout(r, 7000));
-    Promise.all([piso, Promise.race([cerebro, teto])]).then(sair);
+    Promise.all([piso, Promise.race([objeto, teto])]).then(sair);
+  }
+
+  /* Objeto da hero: o livro impresso, no mesmo renderizador da vitrine.
+     Ele é o único título físico do catálogo e o que dá lastro editorial à
+     página — daí estar aqui e não na vitrine apenas. Reaproveita a textura, a
+     contracapa e a lombada que já existiam, então não custa asset novo.
+     A lombada é desenhada em canvas (traz o selo da Âncora); por isso o `api`
+     é declarado antes, para o retorno assíncrono do logotipo achar o objeto. */
+  function setupHeroLivro() {
+    const canvas = $('[data-hero-livro]');
+    if (!canvas || !window.Book3D || !C.publicacoes) return null;
+    const livro = C.publicacoes.itens.find((i) => i.id === 'mundo-real');
+    if (!livro) return null;
+
+    let api = null;
+    const lomb = lombadaDesenhada(livro, (cv) => { if (api) api.lombada(cv); });
+    api = window.Book3D.create(canvas, livro.textura, {
+      contracapa: livro.contracapa,
+      lombada: lomb || livro.lombada,
+      razao: livro.razao,
+      espessura: livro.espessura
+    });
+    return api;
   }
 
   function init() {
@@ -1066,7 +978,7 @@
     setupHeader();
     setupActiveNavigation();
     setupStickyWhatsApp();
-    setupBrain();
+    setupHeroLivro();
     setupPreloader();
     setupShowcase();
     setupTestimonialLightbox();

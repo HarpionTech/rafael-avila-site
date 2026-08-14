@@ -460,6 +460,10 @@
       upload(img, 0);
       pronto = true;
       canvas.classList.add('is-ready');
+      /* Avisa quem espera o objeto existir. O preloader se apoia nisto para
+         saber quando pode subir a cortina — antes disso ele levantaria para uma
+         hero com o palco vazio. */
+      canvas.dispatchEvent(new CustomEvent('livro:pronto'));
       resize();
       draw();
       extra(opts.contracapa, 1, U.hasBack);

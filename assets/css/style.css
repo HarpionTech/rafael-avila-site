@@ -64,14 +64,24 @@ button, a { touch-action: manipulation; }
   text-transform: uppercase;
 }
 .section-intro > p:last-child, .section-intro-split > p { margin: 0; color: var(--muted); }
-.word-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: .06em .015em .1em; margin: -.06em -.015em -.1em; }
+/* A máscara existe para o `overflow: hidden` cortar a palavra enquanto ela sobe
+   na animação de entrada. O recorte se dá na caixa de padding, então é o padding
+   que define quanto de tinta sobrevive — e ele precisa caber o CARÁTER MAIS ALTO
+   da página, não a altura média da linha.
+   Com .06em em cima, maiúscula acentuada era decapitada: o Ê de VOCÊ e o Ã de
+   NÃO perdiam o diacrítico. Passou despercebido enquanto o título da hero não
+   tinha acento nenhum. O aperto vem do `line-height: .95` do h1 — nos h2, com
+   1.12, a mesma máscara sobrava. Dimensionado para o pior caso: .22em cobre o
+   circunflexo maiúsculo, e .16em embaixo cobre a cauda do Q itálico de QUEM.
+   As margens espelham o padding, então o layout não anda um pixel. */
+.word-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding: .22em .015em .16em; margin: -.22em -.015em -.16em; }
 .word-mask > span { display: inline-block; will-change: transform; }
 
 /* Fundo da página: a sala fica fixa atrás de tudo e as seções rolam por cima,
    então a sala não se repete a cada seção — repetir a estante simétrica cinco
    vezes denunciaria na hora que é a mesma imagem. O véu por cima mantém o texto
    legível; sem ele o contraste cai abaixo do mínimo em cima das prateleiras. */
-.page-bg { position: fixed; z-index: -2; inset: 0; pointer-events: none; }
+.page-bg { position: fixed; z-index: -2; inset: 0; overflow: hidden; pointer-events: none; }
 .page-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 /* Um véu só, calibrado: antes eu empilhava opacity .5 na imagem COM um véu de
    90% por cima, e o resultado era preto — sobravam ~7% da foto. */
@@ -84,10 +94,47 @@ button, a { touch-action: manipulation; }
    A sala é a mesma da hero, e o cérebro que aparece aqui é O MESMO elemento da
    hero — não uma cópia. Duas instâncias custariam dois contextos WebGL e o dobro
    dos assets, e ainda assim a transição teria de trocar um pelo outro no ar. */
-.preloader { position: fixed; z-index: 300; inset: 0; display: grid; place-items: center; overflow: hidden; background: #0b0b0c; will-change: transform; }
-.preloader__sala { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.preloader__marca { position: relative; z-index: 2; display: grid; justify-items: center; gap: 1.6rem; transform: translateY(clamp(120px, 21vh, 220px)); }
-.preloader__titulo { margin: 0; color: var(--bronze); font-family: var(--serif); font-size: clamp(.95rem, 1.5vw, 1.3rem); font-weight: 400; letter-spacing: .42em; text-indent: .42em; text-transform: uppercase; animation: respira-bemvindo 2.2s ease-in-out infinite; }
+/* SEM fundo próprio, de propósito. O contêiner é só a moldura das duas metades:
+   se ele pintasse o preto, a fresta que elas abrem revelaria ELE, e a página só
+   apareceria no fim, quando a cortina é removida — era o flash preto entre a
+   abertura e o site. Quem cobre a tela são as metades, e o que a fresta mostra
+   é o que está atrás de tudo: a página. */
+.preloader { position: fixed; z-index: 300; inset: 0; overflow: hidden; background: transparent; }
+
+/* Duas metades da MESMA foto, encostadas na linha do meio.
+   Cada uma recorta metade da tela mas carrega a imagem em altura de viewport
+   inteira, uma ancorada no topo e outra no pé — juntas remontam a sala sem
+   emenda. 50.2% em vez de 50%: as duas se sobrepõem por uma fresta de nada, o
+   suficiente para o arredondamento de subpixel não abrir um fio claro no meio.
+   Como é a mesma imagem alinhada, a sobreposição desenha os mesmos pixels. */
+.preloader__metade { position: absolute; right: 0; left: 0; height: 50.2%; overflow: hidden; background: #0b0b0c; will-change: transform; }
+.preloader__metade--topo { top: 0; }
+.preloader__metade--base { bottom: 0; }
+.preloader__metade img { position: absolute; right: 0; left: 0; width: 100%; height: 100vh; object-fit: cover; }
+.preloader__metade--topo img { top: 0; }
+.preloader__metade--base img { bottom: 0; }
+
+/* A luz que abre a fresta. Nasce como um ponto no meio do texto (scaleX 0) e
+   corre para as duas extremidades. O halo é box-shadow e não um segundo
+   elemento: acompanha a escala sem precisar de sincronia. */
+.preloader__luz {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  transform: translateY(-50%) scaleX(0);
+  background: linear-gradient(90deg, transparent, rgba(226,200,143,.85) 10%, #fff6e2 50%, rgba(226,200,143,.85) 90%, transparent);
+  box-shadow: 0 0 26px 5px rgba(255,236,190,.5), 0 0 78px 20px rgba(226,200,143,.25);
+  pointer-events: none;
+}
+
+.preloader__marca { position: absolute; z-index: 3; top: 50%; left: 50%; display: grid; justify-items: center; transform: translate(-50%, -50%); }
+/* Grande e no centro óptico da tela: agora ele é o único elemento da cortina, e
+   é dele que a luz nasce. O tracking desce de .42em para .2em porque a folga
+   que dava respiro a 21px viraria uma palavra de dois metros a 96px. */
+.preloader__titulo { margin: 0; color: var(--bronze); font-family: var(--serif); font-size: clamp(2.1rem, 8.5vw, 6rem); font-weight: 400; letter-spacing: .2em; text-indent: .2em; line-height: 1; text-transform: uppercase; white-space: nowrap; animation: respira-bemvindo 2.2s ease-in-out infinite; }
 /* A espera é de 4s, e texto parado nesse tempo lê como página travada — a
    respiração é o que diz que ainda está carregando.
    Pulsa só em `opacity`, de propósito: é o único canal que compõe na GPU sem
@@ -99,17 +146,13 @@ button, a { touch-action: manipulation; }
   0%, 100% { opacity: .45; }
   50% { opacity: 1; }
 }
-/* Fio com o miolo aceso, não uma linha chapada: é o mesmo vocabulário do brilho
-   que corre nos anéis do cérebro. */
-.preloader__risco { width: clamp(180px, 22vw, 290px); height: 1px; background: linear-gradient(90deg, transparent, rgba(226,200,143,.15) 18%, rgba(255,236,190,.95) 50%, rgba(226,200,143,.15) 82%, transparent); }
+/* O antigo fio decorativo sob o texto saiu: quem faz esse papel agora é a
+   própria luz que abre a cortina, e dois fios competiriam pela mesma leitura. */
 
 /* Enquanto a cortina está no ar a página não rola: o cérebro é posicionado em
    coordenadas de viewport, e um scroll no meio da transição o deixaria fora de
    lugar ao aterrissar. */
 body.esta-carregando { overflow: hidden; }
-/* O cérebro sobe para cima da cortina. `position: fixed` escapa do overflow
-   hidden da hero — nenhum ancestral dele cria bloco de contenção. */
-.brain-canvas-shell.no-preloader { z-index: 320; }
 
 @media (prefers-reduced-motion: reduce) {
   .preloader { transition: opacity .3s linear; }
@@ -266,6 +309,22 @@ body.esta-carregando { overflow: hidden; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .85rem 1.5rem; align-items: center; }
 .text-link { display: inline-flex; min-height: 44px; align-items: center; gap: .65rem; border-bottom: 1px solid var(--line-light); color: var(--white); font-size: .74rem; font-weight: 700; }
 .microcopy { margin: .9rem 0 0; color: #a49c90; font-size: .68rem; }
+
+/* Objeto da hero: o livro impresso, em 3D.
+   Ao contrário do cérebro que ficava aqui, este é matéria e não luz. O cérebro
+   era uma nuvem de pontos que entrava em `screen` para somar sobre a foto, com
+   máscara circular e deslocada para dentro do círculo desenhado no cenário. O
+   livro é sólido: sem mistura, sem máscara, centrado na própria coluna, e o
+   fundo transparente do canvas já o assenta na sala. */
+.hero-obj { position: relative; display: grid; place-items: center; min-height: 560px; margin: 0; }
+.hero-obj__shell { position: relative; width: min(560px, 100%); aspect-ratio: .78; }
+/* O canvas cobre o pôster e só aparece quando a textura subiu — o `is-ready`
+   vem do próprio renderizador, junto com o evento que o preloader escuta. */
+.hero-obj__gl { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; cursor: grab; touch-action: pan-y; transition: opacity .7s var(--ease-out); }
+.hero-obj__gl.is-ready { opacity: 1; }
+.hero-obj__gl.is-dragging { cursor: grabbing; }
+.hero-obj__poster { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; display: block; object-fit: contain; transition: opacity .7s var(--ease-out); }
+.hero-obj__gl.is-ready + .hero-obj__poster { opacity: 0; }
 
 .brain-stage { --pointer-x: 50%; --pointer-y: 50%; position: relative; min-height: 560px; margin: 0; isolation: isolate; }
 /* Sem recorte elíptico: a silhueta agora vem da máscara anatômica no canvas, e
@@ -493,7 +552,11 @@ body.esta-carregando { overflow: hidden; }
 
 /* Contact */
 .contact-section { overflow: hidden; background: transparent; color: var(--white); }
-.contact-section::before { content: ""; position: absolute; top: -18rem; right: -12rem; width: 38rem; height: 38rem; border-radius: 50%; background: radial-gradient(circle, rgba(226,200,143,.2), transparent 68%); pointer-events: none; }
+/* Havia aqui um halo decorativo: um círculo de 38rem puxado para fora pelo topo
+   e pela direita. Como a seção tem `overflow: hidden`, ele era cortado RETO na
+   borda de cima — virava um retângulo de luz com aresta dura, que descia junto
+   com a rolagem e lia como mancha acidental sobre a foto da sala. A cena já traz
+   a própria iluminação; não precisa de um segundo foco por cima. */
 .contact-layout { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, .72fr); gap: clamp(3rem, 9vw, 9rem); align-items: end; }
 .contact-copy h2 { max-width: 800px; color: var(--white); }
 .contact-copy > p:last-child { max-width: 680px; margin: 1.5rem 0 0; color: #a8a196; }
@@ -542,12 +605,22 @@ body.esta-carregando { overflow: hidden; }
   background: linear-gradient(90deg, transparent, rgba(226,200,143,.5) 32%, rgba(226,200,143,.5) 68%, transparent);
   pointer-events: none;
 }
-.footer-inner { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: end; }
-.footer-inner > div strong, .footer-inner > div span { display: block; }
-.footer-inner > div strong { font-family: var(--serif); font-size: 1.55rem; font-weight: 500; }
-.footer-inner > div span { color: var(--bronze-light); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase; }
-.footer nav { display: flex; gap: 1.3rem; color: #a8a196; font-size: .68rem; }
-.footer nav a:hover { color: var(--bronze-light); }
+/* A marca ocupa quase metade e as três listas dividem o resto: o bloco do nome
+   carrega o cargo longo e o CTA, e precisa de largura; as listas são só links
+   curtos. `start` no alinhamento porque as colunas têm alturas diferentes —
+   alinhadas pela base, os títulos delas ficariam em degrau. */
+.footer-inner { display: grid; grid-template-columns: minmax(260px, 1.6fr) repeat(3, minmax(130px, 1fr)); gap: clamp(1.8rem, 4vw, 3.5rem); align-items: start; }
+.footer-marca strong, .footer-marca span { display: block; }
+.footer-marca strong { font-family: var(--serif); font-size: 1.55rem; font-weight: 500; }
+.footer-marca span { margin-top: .35rem; color: var(--bronze-light); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase; }
+/* O último CTA da página. Ela inteira leva ao WhatsApp, e quem chega ao rodapé
+   sem ter clicado não deveria ter de subir para achar o botão. */
+.footer-marca .liquid-button { margin-top: 1.4rem; }
+
+.footer-col { display: flex; flex-direction: column; gap: .7rem; color: #a8a196; font-size: .68rem; }
+.footer-col h2 { margin: 0 0 .3rem; color: var(--white); font-family: var(--sans); font-size: .58rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.footer-col a { color: inherit; transition: color .2s ease; }
+.footer-col a:hover { color: var(--bronze-light); }
 /* #7a746b sumia: o rodapé cai justamente no assoalho aceso do cenário, e o
    crédito é a única linha que não tem painel atrás para se apoiar. */
 .footer-inner > p { grid-column: 1 / -1; margin: 0; padding-top: 1.2rem; border-top: 1px solid var(--line-light); color: #a49c91; font-size: .62rem; text-shadow: 0 1px 3px rgba(0,0,0,.65); }
@@ -633,8 +706,11 @@ body.esta-carregando { overflow: hidden; }
   /* O header é fixo: sem reservar a altura dele aqui, a primeira linha da hero
      passa por baixo — era o kicker sumindo atrás da marca. */
   .hero { padding: calc(var(--header-height) + 1.5rem) 0 3.5rem; }
-  .hero-copy h1 { font-size: clamp(2.2rem, 11vw, 3rem); line-height: .95; }
-  .hero-copy h1 em { margin-left: .7rem; }
+  /* A manchete do cliente tem 76 caracteres, quase o dobro da anterior. No
+     tamanho antigo ela ocupava sete linhas e 285px — a hero virava só título.
+     Menor, fecha em cinco linhas e sobra respiro para a chamada e os botões. */
+  .hero-copy h1 { font-size: clamp(1.8rem, 8.4vw, 2.5rem); line-height: .98; }
+  .hero-copy h1 em { margin-left: .45rem; }
   .hero-lead { font-size: 1rem; }
   /* Kicker menor e quebrando: com .18em de entreletra a linha inteira não cabe
      em 440px e era cortada na borda. */
@@ -707,9 +783,11 @@ body.esta-carregando { overflow: hidden; }
   .contact-icon { width: 44px; height: 44px; }
   .contact-channel strong { font-size: 1.05rem; }
 
-  .footer-inner { grid-template-columns: 1fr; }
-  .footer-inner > p { grid-column: 1; }
-  .footer nav { justify-content: flex-start; }
+  /* Marca inteira em cima, e as tres listas em duas colunas: uma coluna so
+     empurraria o credito para 600px abaixo do CTA. */
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+  .footer-marca { grid-column: 1 / -1; }
+  .footer-inner > p { grid-column: 1 / -1; }
   .footer { padding-bottom: 5rem; }
   /* Botão flutuante, não barra. Esticado de ponta a ponta ele deixava de ser um
      atalho e virava um rodapé fixo: tapava a linha de baixo de qualquer seção e
@@ -749,7 +827,11 @@ body.esta-carregando { overflow: hidden; }
 /* A altura do palco vira variável porque as setas precisam dela: empilhado, elas
    saem da barra e vão para as laterais do livro, e o que as centraliza na altura
    dele é metade deste valor. Declarada uma vez só. */
-.showcase { --palco: clamp(430px, 56vw, 720px); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+/* O palco encolheu e a coluna do texto engordou. Antes o livro ocupava ~550px
+   de um palco de 720 e o card tinha 454: sobrava um vão morto embaixo do livro,
+   a barra caía longe dele, e as três peças pareciam de páginas diferentes.
+   Com o palco perto da altura do próprio livro, os três se alinham. */
+.showcase { --palco: clamp(400px, 44vw, 580px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr); gap: clamp(2rem, 5vw, 4rem); align-items: center; }
 .showcase__stage { position: relative; height: var(--palco); perspective: 1500px; }
 .showcase__ring { position: absolute; inset: 0; transform-style: preserve-3d; transform: translateZ(calc(var(--radius) * -1)) rotateY(var(--turn, 0deg)); transition: transform .9s var(--ease-out); --radius: 420px; }
 .showcase__item {
@@ -772,9 +854,59 @@ body.esta-carregando { overflow: hidden; }
 .showcase__item.is-front { filter: none; }
 .showcase__floor { display: none; }
 
-.showcase__panel { position: relative; z-index: 6; padding: clamp(1.5rem, 3vw, 2.2rem); border-radius: 1.2rem; }
+/* `overflow: hidden` para a fita de lançamento ser cortada pela quina
+   arredondada do painel em vez de escapar por cima dela. */
+.showcase__panel { position: relative; z-index: 6; padding: clamp(1.5rem, 3vw, 2.2rem); border-radius: 1.2rem; overflow: hidden; }
 .showcase__card { display: none; }
 .showcase__card.is-active { display: block; }
+/* Fita diagonal no canto do painel.
+   Mora dentro do CARD, mas se mede contra o PAINEL — que é o ancestral
+   posicionado mais próximo. Isso resolve dois problemas de uma vez: a fita
+   encosta na quina real do painel em vez de ficar recuada pelo padding dele, e
+   como só o card ativo é exibido, só o livro que tem etiqueta mostra a fita.
+   Nenhum JS decide isso.
+   A caixa quadrada com `overflow: hidden` é o que corta as pontas da faixa
+   rente à quina; sem ela, as duas sobras apareceriam para fora do painel. */
+.showcase__fita { position: absolute; z-index: 7; top: 0; right: 0; width: 148px; height: 148px; margin: 0; overflow: hidden; pointer-events: none; }
+.showcase__fita span {
+  position: absolute;
+  top: 30px;
+  right: -46px;
+  width: 200px;
+  padding: .4rem 0;
+  background: linear-gradient(180deg, #e5392a, #bf1f16);
+  color: #fff;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-align: center;
+  text-transform: uppercase;
+  /* 45° e não 135°: no canto superior direito é a diagonal que SOBE da esquerda
+     para a direita, e é ela que deixa o texto na horizontal de leitura. */
+  transform: rotate(45deg);
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+}
+
+/* Cada coluna é um par: o selo do formato e o botão dele.
+   `1fr 1fr` e não `auto`: os rótulos têm larguras bem diferentes, e em largura
+   automática um botão ficaria com o dobro do outro — parecendo hierarquia onde
+   não há. */
+.book-offer { display: grid; gap: .9rem 1rem; }
+.book-offer--duplo { grid-template-columns: 1fr 1fr; }
+.oferta { display: flex; flex-direction: column; gap: .75rem; }
+.oferta__selo { display: flex; align-items: flex-start; gap: .55rem; margin: 0; }
+/* 30px e não 22: o caminhão tem janela, rodas vazadas e o V do baú, e abaixo de
+   ~28px esses vazados fecham e ele vira mancha. O bloco de texto ao lado tem
+   duas linhas (~32px), então o ícone maior ainda fica proporcional. */
+.oferta__selo svg { flex: none; width: 30px; height: 30px; margin-top: -.1rem; color: var(--bronze-light); fill: currentColor; stroke: none; }
+.oferta__selo b { display: block; color: var(--white); font-size: .72rem; font-weight: 600; line-height: 1.25; }
+.oferta__selo i { display: block; margin-top: .12rem; color: #8f887e; font-size: .66rem; font-style: normal; line-height: 1.3; }
+/* `auto` no topo empurra o botão para a base: quando um selo ocupa duas linhas e
+   o outro uma, os dois botões continuam alinhados entre si. */
+.oferta .liquid-button { width: 100%; margin-top: auto; padding-inline: .7rem; font-size: .7rem; letter-spacing: 0; }
+.oferta .is-disabled { cursor: not-allowed; opacity: .55; }
+@media (max-width: 520px) { .book-offer--duplo { grid-template-columns: 1fr; } }
+
 .showcase__card h3 { margin: 0 0 .8rem; font-family: var(--serif); font-size: clamp(1.3rem, 2.2vw, 1.75rem); font-weight: 500; line-height: 1.15; }
 .showcase__card > p { margin: 0 0 1.1rem; color: #bdb6ab; font-size: .95rem; }
 .showcase__card ul { display: grid; gap: .5rem; margin: 0 0 1.5rem; padding: 0; list-style: none; }
@@ -813,28 +945,66 @@ body.esta-carregando { overflow: hidden; }
   background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(8,8,10,.72), transparent 72%);
   pointer-events: none;
 }
-.showcase__arrow { display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: var(--white); cursor: pointer; transition: transform .16s ease; }
+/* Presas à lateral do palco, em TODA largura.
+   Antes elas viviam na barra embaixo e só iam para o lado no telefone. Isso
+   dava dois comportamentos para manter e um ponto de quebra: em telas de ~950px
+   a barra caía longe do livro e a composição desandava. Ancoradas no palco — que
+   é a caixa do livro tanto na coluna dupla quanto empilhado — `left/right: 0`
+   acerta sozinho, sem depender de onde a grade quebra. */
+.showcase__arrow {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  /* Centraliza por MARGEM negativa (metade dos 46px), não por translateY(-50%):
+     a seta é um `liquid-control`, e o realce de toque desses controles é escrito
+     pelo GSAP direto no `transform` — inline vence folha, e a centralização
+     sumiria no primeiro toque, jogando a seta para o meio do palco. */
+  margin-top: -23px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  color: var(--white);
+  cursor: pointer;
+  transition: transform .16s ease;
+}
+[data-showcase-prev] { left: 0; }
+[data-showcase-next] { right: 0; }
 /* Confirmação de toque. No desktop o hover já avisa que o controle respondeu;
    no telefone não existe hover, e o único retorno de um toque na seta era o
    livro começar a girar — que leva quase um segundo para ser percebido. */
+/* Escala pura: quem centraliza agora é a margem, então o transform está livre
+   para ser só o afundamento do toque. */
 .showcase__arrow:active { transform: scale(.9); }
 .showcase__arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 /* SVG e não "←": o glifo de seta herda as métricas da fonte e nunca fica
    opticamente centrado no círculo — sempre sobra folga de um lado. */
 
-.showcase__pager { display: flex; align-items: center; gap: .85rem; }
-.showcase__conta { display: flex; align-items: baseline; gap: .25rem; font-family: var(--serif); font-size: .8rem; letter-spacing: .04em; }
+/* Trilho vertical, colado na borda esquerda do palco e ancorado embaixo.
+   Ancorado no pé, e não centrado, porque o meio é onde as setas moram — as duas
+   coisas disputariam a mesma altura. Ficar em coluna resolve o motivo original
+   da mudança: deitado embaixo do palco, o contador passava por baixo do card em
+   telas médias, onde o card desce mais que o livro. */
+/* Largura fixa igual à da seta: sem ela o `align-items: center` centrava o
+   contador — mais largo que os traços — em torno de x=0, e metade dele saía da
+   tela. Com a caixa definida, o trilho fica na mesma coluna vertical da seta. */
+.showcase__pager { position: absolute; z-index: 8; bottom: 0; left: 0; width: 46px; display: flex; flex-direction: column; align-items: center; gap: .85rem; }
+.showcase__conta { display: flex; align-items: baseline; justify-content: center; gap: .18rem; font-family: var(--serif); font-size: .72rem; letter-spacing: .02em; }
 .showcase__conta b { color: var(--bronze-light); font-weight: 500; }
 .showcase__conta i, .showcase__conta em { color: #6f6a61; font-style: normal; }
 
 /* Trilha: um traço por publicação, clicável. Além de dizer onde o visitante
    está — que a vitrine de um livro por vez escondia —, dá o atalho para pular
    direto, em vez de bater na seta três vezes. */
-.showcase__trilha { display: flex; align-items: center; gap: .3rem; margin: 0; padding: 0; list-style: none; }
-.showcase__trilha button { display: block; padding: .55rem .1rem; background: none; border: 0; cursor: pointer; }
-.showcase__trilha span { display: block; width: 26px; height: 2px; background: rgba(226,200,143,.22); transition: background-color .35s var(--ease-out), width .35s var(--ease-out); }
+/* Traços de pé, não deitados: o trilho virou coluna, então quem cresce ao ficar
+   ativo é a ALTURA. O padding também troca de eixo para a área de toque
+   continuar com ~44px no sentido em que o dedo erra. */
+.showcase__trilha { display: flex; flex-direction: column; align-items: center; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.showcase__trilha button { display: block; padding: .1rem .55rem; background: none; border: 0; cursor: pointer; }
+.showcase__trilha span { display: block; width: 2px; height: 22px; background: rgba(226,200,143,.22); transition: background-color .35s var(--ease-out), height .35s var(--ease-out), width .35s var(--ease-out); }
 .showcase__trilha button:hover span { background: rgba(226,200,143,.5); }
-.showcase__trilha button.is-active span { width: 44px; background: var(--bronze-light); }
+.showcase__trilha button.is-active span { height: 40px; background: var(--bronze-light); }
 
 .showcase__hint { flex-basis: 100%; margin: 0; color: #8b857b; font-size: .58rem; letter-spacing: .16em; text-align: center; text-transform: uppercase; }
 
@@ -846,33 +1016,18 @@ body.esta-carregando { overflow: hidden; }
   .showcase { --palco: clamp(370px, 78vw, 460px); position: relative; }
   .showcase__ring { --radius: 250px; }
 
-  /* Setas na lateral do livro, não embaixo dele.
-     Empilhado, a barra de navegação cai no pé da seção — que é exatamente onde
-     o botão fixo de agendar mora. Trocar de livro virava descer até a seta e
-     subir de novo para ver a capa. Nas laterais elas ficam na altura do próprio
-     livro: olho e polegar no mesmo lugar. Continuam no fluxo do DOM dentro da
-     barra, então a ordem de tabulação e o leitor de tela não mudam.
+  /* Empilhado, o trilho volta a ser deitado e vai para o pé do palco, no centro.
+     O que o mandou para a lateral foi o card ficar AO LADO do livro em telas
+     médias — aqui ele fica abaixo, e o problema não existe. Em coluna, o palco
+     mais baixo do celular fazia o trilho encostar na seta. */
+  /* `width: auto` desfaz os 46px do trilho vertical: deitado, a largura é a
+     soma dos traços, e mantê-la travada espremeria a linha inteira. */
+  .showcase__pager { left: 50%; bottom: 0; width: auto; flex-direction: row; transform: translateX(-50%); }
+  .showcase__trilha { flex-direction: row; }
+  .showcase__trilha button { padding: .55rem .1rem; }
+  .showcase__trilha span { width: 22px; height: 2px; }
+  .showcase__trilha button.is-active span { width: 40px; height: 2px; }
 
-     A barra deixa de ser `relative` para não sequestrar as setas: elas precisam
-     se medir contra a vitrine inteira, cujo topo é o topo do palco. A cortina
-     radial que a barra desenhava no ::before, e que dependia desse `relative`,
-     passa a ser fundo dela mesma. */
-  .showcase__nav { position: static; background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(8,8,10,.72), transparent 72%); }
-  .showcase__nav::before { display: none; }
-  .showcase__arrow {
-    position: absolute;
-    top: calc(var(--palco) / 2);
-    /* Metade da altura da seta, e não translateY(-50%): o realce de toque do
-       liquid-control é escrito pelo GSAP no `transform`, e apagaria a
-       centralização no primeiro toque. */
-    margin-top: -22px;
-    z-index: 8;
-  }
-  [data-showcase-prev] { left: 0; }
-  [data-showcase-next] { right: 0; }
-  /* Recompõe o afundamento com a centralização: aqui o transform já carrega o
-     translateY, e uma escala solta jogaria a seta de volta para o topo. */
-  .showcase__arrow:active { transform: translateY(-50%) scale(.9); }
   .method-steps--row { grid-template-columns: 1fr 1fr; }
   /* Empilhado, o painel desce do fundo escuro da parede para a altura do
      assoalho aceso do cenário. Vidro translúcido sobre superfície CLARA continua
