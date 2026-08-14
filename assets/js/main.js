@@ -529,9 +529,36 @@
     /* Redesenha a lombada inteira. É chamada de novo a cada imagem que chega
        (capa, logotipo), porque a ordem importa: o fundo precisa ir antes do
        texto, e pintar por cima do que já estava deixaria fantasma. */
+    /* Onde começa a tarja do pé, lida do fundo JÁ PINTADO.
+       O vão do título sai de folgas geométricas, que não sabem nada do DESENHO
+       do fundo. A capa do Relacionamentos tem uma tarja verde escura no pé: o
+       título terminava 17px dentro dela e, sendo verde escuro sobre verde
+       escuro (luminância 45 contra 40), a última letra sumia. Parecia corte de
+       texto, era contraste zero.
+       Medir o fundo em vez de fixar a posição na configuração faz a regra valer
+       para qualquer capa — inclusive as que não têm tarja, onde ela não aperta
+       nada. Varre de baixo para cima e para no primeiro degrau de luz. */
+    const inicioDaTarja = () => {
+      if (!capaCarregada) return alt;
+      let faixa;
+      try {
+        faixa = ctx.getImageData(Math.floor(larg / 2), 0, 1, alt).data;
+      } catch (e) {
+        return alt;            // canvas maculado: segue sem a restrição
+      }
+      const luz = (y) => 0.2126 * faixa[y * 4] + 0.7152 * faixa[y * 4 + 1] + 0.0722 * faixa[y * 4 + 2];
+      const pe = luz(alt - 8);
+      for (let y = alt - 8; y > alt * 0.55; y--) {
+        if (Math.abs(luz(y) - pe) > 26) return y;
+      }
+      return alt;
+    };
+
     const pinta = () => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       pintaFundo(capaCarregada);
+      // Precisa ser lido com o fundo pronto e antes do texto entrar.
+      const tarjaX = inicioDaTarja() - alt / 2;
 
       /* +90° e não -90°: assim o texto corre de CIMA para baixo, com o topo das
          letras virado para a direita — a convenção brasileira, a mesma da foto
@@ -579,7 +606,9 @@
 
       // Título centrado no vão, encolhendo só o quanto for preciso para caber.
       const vaoIni = xAutor + wAutor + corpo * 1.1;
-      const vaoFim = (wSelo ? xSelo : alt / 2 - folga) - corpo * 1.1;
+      // O menor entre o limite geométrico e o começo da tarja: o que vier antes.
+      const vaoFim = Math.min((wSelo ? xSelo : alt / 2 - folga) - corpo * 1.1,
+                              tarjaX - corpo * 0.35);
       const vao = Math.max(1, vaoFim - vaoIni);
       let tTitulo = corpo;
       let wTitulo = medir(arte.titulo, tTitulo, 700, tTitulo * 0.06);
