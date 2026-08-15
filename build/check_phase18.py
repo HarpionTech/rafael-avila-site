@@ -311,6 +311,15 @@ def check_resilience(root: Path, results: Results) -> None:
     except OSError as exc:
         results.assert_true(group, "index.html", "arquivo legivel", False, str(exc))
 
+    for scenario, failures in resilience_browser_scenarios(root).items():
+        results.assert_true(
+            group,
+            f"browser:{scenario}",
+            "conteudo e conversao fail-open",
+            not failures,
+            "; ".join(failures),
+        )
+
 
 def check_network(root: Path, results: Results) -> None:
     group = "network"
@@ -448,6 +457,129 @@ def wait_for_local_server(host: str, port: int, timeout: float = 10.0) -> bool:
         except OSError:
             time.sleep(0.1)
     return False
+
+
+def resilience_browser_scenarios(root: Path) -> dict[str, list[str]]:
+    """Exercita no-JS e falhas independentes dos aprimoramentos visuais."""
+
+    scenarios = {
+        "no-js": {"java_script_enabled": False},
+        "main-js": {"block": "**/assets/js/main.js*"},
+        "gsap": {"block": "**/assets/vendor/gsap.min.js*"},
+        "scroll-trigger": {"block": "**/assets/vendor/ScrollTrigger.min.js*"},
+        "brain-particles": {"block": "**/assets/js/brain-particles.js*"},
+        "book-3d": {"block": "**/assets/js/book-3d.js*"},
+        "canvas-context": {"canvas_failure": True},
+    }
+    failures: dict[str, list[str]] = {name: [] for name in scenarios}
+    install_command = "python -m playwright install chromium"
+
+    try:
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return {"preflight": [f"Playwright ausente; execute pip install -r requirements-dev.txt e {install_command}"]}
+
+    host, port = "127.0.0.1", 8765
+    server: subprocess.Popen[bytes] | None = None
+    try:
+        if not wait_for_local_server(host, port, timeout=0.3):
+            server = subprocess.Popen(
+                [sys.executable, "-m", "http.server", str(port), "--bind", host],
+                cwd=root,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            if not wait_for_local_server(host, port):
+                return {"preflight": ["servidor local nao respondeu em 10 s"]}
+
+        with sync_playwright() as playwright:
+            try:
+                browser = playwright.chromium.launch(headless=True)
+            except PlaywrightError:
+                return {"preflight": [f"Chromium indisponivel; execute {install_command}"]}
+
+            try:
+                for name, options in scenarios.items():
+                    context = browser.new_context(
+                        viewport={"width": 390, "height": 844},
+                        java_script_enabled=options.get("java_script_enabled", True),
+                    )
+                    page = context.new_page()
+                    runtime_errors: list[str] = []
+                    page.on("pageerror", lambda error, bucket=runtime_errors: bucket.append(str(error)))
+
+                    if block := options.get("block"):
+                        page.route(block, lambda route: route.abort())
+                    if options.get("canvas_failure"):
+                        page.add_init_script("""
+                          (() => {
+                            const original = HTMLCanvasElement.prototype.getContext;
+                            HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+                              if (type === 'webgl' && this.matches('[data-book3d], [data-hero-livro]')) return null;
+                              return original.call(this, type, ...args);
+                            };
+                          })();
+                        """)
+
+                    try:
+                        response = page.goto(f"http://{host}:{port}/", wait_until="load", timeout=20_000)
+                        if response is None or not response.ok:
+                            failures[name].append("home nao respondeu HTTP 200")
+                            continue
+
+                        if options.get("java_script_enabled") is False:
+                            page.wait_for_timeout(200)
+                        else:
+                            try:
+                                page.locator("[data-preloader]").wait_for(state="hidden", timeout=3_500)
+                            except PlaywrightTimeoutError:
+                                failures[name].append("cortina permaneceu visivel")
+
+                        for selector in ("#metodo h2", "#ebooks h2", "#contato h2", ".hero-actions [data-wa]"):
+                            if not page.locator(selector).first.is_visible():
+                                failures[name].append(f"conteudo invisivel: {selector}")
+
+                        href = page.locator(".hero-actions [data-wa]").first.get_attribute("href") or ""
+                        if not href.startswith("https://wa.me/"):
+                            failures[name].append("CTA principal sem href real")
+
+                        visible_posters = page.locator(".hero-obj__poster, .showcase__poster").evaluate_all(
+                            "els => els.every(el => { const s = getComputedStyle(el); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0; })"
+                        )
+                        if not visible_posters:
+                            failures[name].append("poster de fallback invisivel")
+
+                        if options.get("java_script_enabled") is False:
+                            all_cards = page.locator(".showcase__card").evaluate_all(
+                                "els => els.length === 5 && els.every(el => getComputedStyle(el).display !== 'none')"
+                            )
+                            controls_hidden = page.locator(".showcase__arrow, .showcase__pager, .showcase__nav").evaluate_all(
+                                "els => els.every(el => getComputedStyle(el).display === 'none')"
+                            )
+                            if not all_cards:
+                                failures[name].append("publicacoes nao aparecem todas em fluxo")
+                            if not controls_hidden:
+                                failures[name].append("controles inertes continuam visiveis")
+
+                        failures[name].extend(f"erro runtime: {error}" for error in runtime_errors)
+                    except PlaywrightError as exc:
+                        failures[name].append(f"Playwright: {str(exc).splitlines()[0]}")
+                    finally:
+                        context.close()
+            finally:
+                browser.close()
+    finally:
+        if server is not None:
+            server.terminate()
+            try:
+                server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait(timeout=5)
+
+    return failures
 
 
 def browser_checks(root: Path) -> int:
