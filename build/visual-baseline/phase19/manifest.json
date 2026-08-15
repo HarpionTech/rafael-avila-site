@@ -1,0 +1,687 @@
+{
+  "deviceScaleFactor": 1,
+  "formatVersion": 1,
+  "reducedMotion": "reduce",
+  "sourceHashes": {
+    "assets/css/style.css": "44790c4eb393b77d3982703a6103f59de746ae37c9fb1df9ade98e8efbba158a",
+    "build/baseline-v1.6.json": "8955cb817990c42a190556e1701b03654ca2dae750948f01fd6f6508957c417f",
+    "index.html": "544a14a6b47059d341d6083ae356448df853d4270be91d0d47023b06a0bdcdd1"
+  },
+  "viewports": {
+    "1024x768": {
+      "brokenImages": [],
+      "documentHeight": 6688,
+      "fonts": {
+        "body": "\"IBM Plex Sans\", sans-serif",
+        "cta": "\"IBM Plex Sans\", sans-serif",
+        "h1": "Newsreader, Georgia, serif",
+        "lead": "\"IBM Plex Sans\", sans-serif"
+      },
+      "h1": {
+        "height": 184.3,
+        "lines": 7
+      },
+      "horizontalOverflow": 0.0,
+      "images": {
+        "full": {
+          "bytes": 2712021,
+          "dimensions": {
+            "height": 6688,
+            "width": 1024
+          },
+          "path": "build/visual-baseline/phase19/1024x768-full.png",
+          "sha256": "0bfd0f57660dd52aec3ec58264da9fc23a81adf5841eb4679e1f4b192218857d"
+        },
+        "hero": {
+          "bytes": 786200,
+          "dimensions": {
+            "height": 753,
+            "width": 1024
+          },
+          "path": "build/visual-baseline/phase19/1024x768-hero.png",
+          "sha256": "81ef5c3f3e6499b17d0486fa78ccfe75b5ccf48ce2a7c6fde27e5e9482b425eb"
+        }
+      },
+      "missing": [],
+      "rects": {
+        "contato": {
+          "height": 393.58,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 5940.86
+        },
+        "cta": {
+          "height": 52.0,
+          "width": 176.23,
+          "x": 35.84,
+          "y": 525.89
+        },
+        "depoimentos": {
+          "height": 1028.88,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 3960.22
+        },
+        "ebooks": {
+          "height": 951.77,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 4989.09
+        },
+        "h1": {
+          "height": 184.3,
+          "width": 428.34,
+          "x": 35.84,
+          "y": 213.62
+        },
+        "header": {
+          "height": 60.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "lead": {
+          "height": 76.78,
+          "width": 428.34,
+          "x": 35.84,
+          "y": 420.31
+        },
+        "metodo": {
+          "height": 1699.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 752.11
+        },
+        "poster": {
+          "height": 610.2,
+          "width": 475.97,
+          "x": 512.19,
+          "y": 90.72
+        },
+        "sobre": {
+          "height": 1509.11,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 2451.11
+        }
+      },
+      "sectionOrder": [
+        {
+          "name": "metodo",
+          "y": 752.11
+        },
+        {
+          "name": "sobre",
+          "y": 2451.11
+        },
+        {
+          "name": "depoimentos",
+          "y": 3960.22
+        },
+        {
+          "name": "ebooks",
+          "y": 4989.09
+        },
+        {
+          "name": "contato",
+          "y": 5940.86
+        }
+      ],
+      "tokens": {
+        "--bronze": "#c8a96a",
+        "--bronze-light": "#e2c88f",
+        "--dark": "#08080a",
+        "--dark-soft": "#101012",
+        "--ink": "#f2ede3",
+        "--ink-soft": "#b8b1a4",
+        "--line": "rgba(226, 200, 143, .16)",
+        "--line-light": "rgba(226, 200, 143, .14)",
+        "--muted": "#8b857b",
+        "--paper": "#0b0b0c",
+        "--paper-deep": "#17171a",
+        "--paper-light": "#121214",
+        "--white": "#f6f2ea"
+      }
+    },
+    "1440x900": {
+      "brokenImages": [],
+      "documentHeight": 6742,
+      "fonts": {
+        "body": "\"IBM Plex Sans\", sans-serif",
+        "cta": "\"IBM Plex Sans\", sans-serif",
+        "h1": "Newsreader, Georgia, serif",
+        "lead": "\"IBM Plex Sans\", sans-serif"
+      },
+      "h1": {
+        "height": 362.91,
+        "lines": 9
+      },
+      "horizontalOverflow": 0.0,
+      "images": {
+        "full": {
+          "bytes": 3462137,
+          "dimensions": {
+            "height": 6742,
+            "width": 1440
+          },
+          "path": "build/visual-baseline/phase19/1440x900-full.png",
+          "sha256": "145c8c28779f7e70fa3a9bf700c3fc47ed3cf8bba0b883d1fdcb12c1cded1987"
+        },
+        "hero": {
+          "bytes": 1280888,
+          "dimensions": {
+            "height": 894,
+            "width": 1440
+          },
+          "path": "build/visual-baseline/phase19/1440x900-hero.png",
+          "sha256": "99b65a99fb32e9aa1e63953eede9a567bcbe1e6f6d3b6a2ffc75d70b83855ddf"
+        }
+      },
+      "missing": [],
+      "rects": {
+        "contato": {
+          "height": 498.05,
+          "width": 1440.0,
+          "x": 0.0,
+          "y": 5892.39
+        },
+        "cta": {
+          "height": 52.0,
+          "width": 176.23,
+          "x": 90.0,
+          "y": 681.53
+        },
+        "depoimentos": {
+          "height": 797.28,
+          "width": 1440.0,
+          "x": 0.0,
+          "y": 3932.25
+        },
+        "ebooks": {
+          "height": 1162.86,
+          "width": 1440.0,
+          "x": 0.0,
+          "y": 4729.53
+        },
+        "h1": {
+          "height": 362.91,
+          "width": 521.64,
+          "x": 90.0,
+          "y": 190.66
+        },
+        "header": {
+          "height": 60.0,
+          "width": 1440.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "lead": {
+          "height": 76.78,
+          "width": 521.64,
+          "x": 90.0,
+          "y": 575.95
+        },
+        "metodo": {
+          "height": 1879.89,
+          "width": 1440.0,
+          "x": 0.0,
+          "y": 893.12
+        },
+        "poster": {
+          "height": 717.94,
+          "width": 560.0,
+          "x": 751.22,
+          "y": 103.19
+        },
+        "sobre": {
+          "height": 1159.23,
+          "width": 1440.0,
+          "x": 0.0,
+          "y": 2773.02
+        }
+      },
+      "sectionOrder": [
+        {
+          "name": "metodo",
+          "y": 893.12
+        },
+        {
+          "name": "sobre",
+          "y": 2773.02
+        },
+        {
+          "name": "depoimentos",
+          "y": 3932.25
+        },
+        {
+          "name": "ebooks",
+          "y": 4729.53
+        },
+        {
+          "name": "contato",
+          "y": 5892.39
+        }
+      ],
+      "tokens": {
+        "--bronze": "#c8a96a",
+        "--bronze-light": "#e2c88f",
+        "--dark": "#08080a",
+        "--dark-soft": "#101012",
+        "--ink": "#f2ede3",
+        "--ink-soft": "#b8b1a4",
+        "--line": "rgba(226, 200, 143, .16)",
+        "--line-light": "rgba(226, 200, 143, .14)",
+        "--muted": "#8b857b",
+        "--paper": "#0b0b0c",
+        "--paper-deep": "#17171a",
+        "--paper-light": "#121214",
+        "--white": "#f6f2ea"
+      }
+    },
+    "390x844": {
+      "brokenImages": [],
+      "documentHeight": 9044,
+      "fonts": {
+        "body": "\"IBM Plex Sans\", sans-serif",
+        "cta": "\"IBM Plex Sans\", sans-serif",
+        "h1": "Newsreader, Georgia, serif",
+        "lead": "\"IBM Plex Sans\", sans-serif"
+      },
+      "h1": {
+        "height": 160.55,
+        "lines": 7
+      },
+      "horizontalOverflow": 0.0,
+      "images": {
+        "full": {
+          "bytes": 1495517,
+          "dimensions": {
+            "height": 9044,
+            "width": 390
+          },
+          "path": "build/visual-baseline/phase19/390x844-full.png",
+          "sha256": "490325265d34394419fa56ea0087ac3872a483eeb915d2e4aded0e8ba5f2f74a"
+        },
+        "hero": {
+          "bytes": 361710,
+          "dimensions": {
+            "height": 1174,
+            "width": 390
+          },
+          "path": "build/visual-baseline/phase19/390x844-hero.png",
+          "sha256": "33778ae9f111eba54a4a7593915eee6b6930813af8fc2d696ace7851c2361e82"
+        }
+      },
+      "missing": [],
+      "rects": {
+        "contato": {
+          "height": 587.12,
+          "width": 390.0,
+          "x": 0.0,
+          "y": 7735.19
+        },
+        "cta": {
+          "height": 52.0,
+          "width": 149.3,
+          "x": 16.0,
+          "y": 426.0
+        },
+        "depoimentos": {
+          "height": 738.5,
+          "width": 390.0,
+          "x": 0.0,
+          "y": 5582.42
+        },
+        "ebooks": {
+          "height": 1414.27,
+          "width": 390.0,
+          "x": 0.0,
+          "y": 6320.92
+        },
+        "h1": {
+          "height": 160.55,
+          "width": 358.0,
+          "x": 16.0,
+          "y": 111.89
+        },
+        "header": {
+          "height": 58.0,
+          "width": 390.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "lead": {
+          "height": 102.38,
+          "width": 358.0,
+          "x": 16.0,
+          "y": 294.83
+        },
+        "metodo": {
+          "height": 2799.92,
+          "width": 390.0,
+          "x": 0.0,
+          "y": 1173.78
+        },
+        "poster": {
+          "height": 458.97,
+          "width": 358.0,
+          "x": 16.0,
+          "y": 608.3
+        },
+        "sobre": {
+          "height": 1608.72,
+          "width": 390.0,
+          "x": 0.0,
+          "y": 3973.7
+        }
+      },
+      "sectionOrder": [
+        {
+          "name": "metodo",
+          "y": 1173.78
+        },
+        {
+          "name": "sobre",
+          "y": 3973.7
+        },
+        {
+          "name": "depoimentos",
+          "y": 5582.42
+        },
+        {
+          "name": "ebooks",
+          "y": 6320.92
+        },
+        {
+          "name": "contato",
+          "y": 7735.19
+        }
+      ],
+      "tokens": {
+        "--bronze": "#c8a96a",
+        "--bronze-light": "#e2c88f",
+        "--dark": "#08080a",
+        "--dark-soft": "#101012",
+        "--ink": "#f2ede3",
+        "--ink-soft": "#b8b1a4",
+        "--line": "rgba(226, 200, 143, .16)",
+        "--line-light": "rgba(226, 200, 143, .14)",
+        "--muted": "#8b857b",
+        "--paper": "#0b0b0c",
+        "--paper-deep": "#17171a",
+        "--paper-light": "#121214",
+        "--white": "#f6f2ea"
+      }
+    },
+    "430x932": {
+      "brokenImages": [],
+      "documentHeight": 8989,
+      "fonts": {
+        "body": "\"IBM Plex Sans\", sans-serif",
+        "cta": "\"IBM Plex Sans\", sans-serif",
+        "h1": "Newsreader, Georgia, serif",
+        "lead": "\"IBM Plex Sans\", sans-serif"
+      },
+      "h1": {
+        "height": 176.95,
+        "lines": 7
+      },
+      "horizontalOverflow": 0.0,
+      "images": {
+        "full": {
+          "bytes": 1658923,
+          "dimensions": {
+            "height": 8989,
+            "width": 430
+          },
+          "path": "build/visual-baseline/phase19/430x932-full.png",
+          "sha256": "b8ecd6ed81d775c625e50b2597776de61613325acd48d99208801a9d29d13cfc"
+        },
+        "hero": {
+          "bytes": 395723,
+          "dimensions": {
+            "height": 1165,
+            "width": 430
+          },
+          "path": "build/visual-baseline/phase19/430x932-hero.png",
+          "sha256": "7cd1c483141194ed7c1e602caa4463e0e866e6f7de77c16eccc2c49f4139e9a0"
+        }
+      },
+      "missing": [],
+      "rects": {
+        "contato": {
+          "height": 594.31,
+          "width": 430.0,
+          "x": 0.0,
+          "y": 7691.11
+        },
+        "cta": {
+          "height": 52.0,
+          "width": 149.3,
+          "x": 16.0,
+          "y": 416.81
+        },
+        "depoimentos": {
+          "height": 791.94,
+          "width": 430.0,
+          "x": 0.0,
+          "y": 5498.44
+        },
+        "ebooks": {
+          "height": 1400.73,
+          "width": 430.0,
+          "x": 0.0,
+          "y": 6290.38
+        },
+        "h1": {
+          "height": 176.95,
+          "width": 398.0,
+          "x": 16.0,
+          "y": 111.89
+        },
+        "header": {
+          "height": 58.0,
+          "width": 430.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "lead": {
+          "height": 76.78,
+          "width": 398.0,
+          "x": 16.0,
+          "y": 311.23
+        },
+        "metodo": {
+          "height": 2723.53,
+          "width": 430.0,
+          "x": 0.0,
+          "y": 1164.59
+        },
+        "poster": {
+          "height": 510.25,
+          "width": 398.0,
+          "x": 16.0,
+          "y": 573.47
+        },
+        "sobre": {
+          "height": 1610.31,
+          "width": 430.0,
+          "x": 0.0,
+          "y": 3888.12
+        }
+      },
+      "sectionOrder": [
+        {
+          "name": "metodo",
+          "y": 1164.59
+        },
+        {
+          "name": "sobre",
+          "y": 3888.12
+        },
+        {
+          "name": "depoimentos",
+          "y": 5498.44
+        },
+        {
+          "name": "ebooks",
+          "y": 6290.38
+        },
+        {
+          "name": "contato",
+          "y": 7691.11
+        }
+      ],
+      "tokens": {
+        "--bronze": "#c8a96a",
+        "--bronze-light": "#e2c88f",
+        "--dark": "#08080a",
+        "--dark-soft": "#101012",
+        "--ink": "#f2ede3",
+        "--ink-soft": "#b8b1a4",
+        "--line": "rgba(226, 200, 143, .16)",
+        "--line-light": "rgba(226, 200, 143, .14)",
+        "--muted": "#8b857b",
+        "--paper": "#0b0b0c",
+        "--paper-deep": "#17171a",
+        "--paper-light": "#121214",
+        "--white": "#f6f2ea"
+      }
+    },
+    "768x1024": {
+      "brokenImages": [],
+      "documentHeight": 8801,
+      "fonts": {
+        "body": "\"IBM Plex Sans\", sans-serif",
+        "cta": "\"IBM Plex Sans\", sans-serif",
+        "h1": "Newsreader, Georgia, serif",
+        "lead": "\"IBM Plex Sans\", sans-serif"
+      },
+      "h1": {
+        "height": 287.97,
+        "lines": 5
+      },
+      "horizontalOverflow": 1.0,
+      "images": {
+        "full": {
+          "bytes": 3049296,
+          "dimensions": {
+            "height": 8801,
+            "width": 769
+          },
+          "path": "build/visual-baseline/phase19/768x1024-full.png",
+          "sha256": "8edb14aa921688d7360e45ead3a5f392fa2e379cafa41e2184fe79538d6885a7"
+        },
+        "hero": {
+          "bytes": 749132,
+          "dimensions": {
+            "height": 1420,
+            "width": 768
+          },
+          "path": "build/visual-baseline/phase19/768x1024-hero.png",
+          "sha256": "6bfc2cd72a796e40f0b37e8b070f5d66e199d26f7ef2188324eb5977e1c8b244"
+        }
+      },
+      "missing": [],
+      "rects": {
+        "contato": {
+          "height": 589.02,
+          "width": 768.0,
+          "x": 0.0,
+          "y": 7843.19
+        },
+        "cta": {
+          "height": 52.0,
+          "width": 176.23,
+          "x": 26.89,
+          "y": 529.61
+        },
+        "depoimentos": {
+          "height": 989.91,
+          "width": 768.0,
+          "x": 0.0,
+          "y": 5550.08
+        },
+        "ebooks": {
+          "height": 1303.2,
+          "width": 768.0,
+          "x": 0.0,
+          "y": 6539.98
+        },
+        "h1": {
+          "height": 287.97,
+          "width": 640.0,
+          "x": 26.89,
+          "y": 113.67
+        },
+        "header": {
+          "height": 58.0,
+          "width": 768.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "lead": {
+          "height": 76.78,
+          "width": 560.0,
+          "x": 26.89,
+          "y": 424.03
+        },
+        "metodo": {
+          "height": 2433.91,
+          "width": 768.0,
+          "x": 0.0,
+          "y": 1419.33
+        },
+        "poster": {
+          "height": 717.94,
+          "width": 560.0,
+          "x": 104.0,
+          "y": 661.39
+        },
+        "sobre": {
+          "height": 1696.84,
+          "width": 768.0,
+          "x": 0.0,
+          "y": 3853.23
+        }
+      },
+      "sectionOrder": [
+        {
+          "name": "metodo",
+          "y": 1419.33
+        },
+        {
+          "name": "sobre",
+          "y": 3853.23
+        },
+        {
+          "name": "depoimentos",
+          "y": 5550.08
+        },
+        {
+          "name": "ebooks",
+          "y": 6539.98
+        },
+        {
+          "name": "contato",
+          "y": 7843.19
+        }
+      ],
+      "tokens": {
+        "--bronze": "#c8a96a",
+        "--bronze-light": "#e2c88f",
+        "--dark": "#08080a",
+        "--dark-soft": "#101012",
+        "--ink": "#f2ede3",
+        "--ink-soft": "#b8b1a4",
+        "--line": "rgba(226, 200, 143, .16)",
+        "--line-light": "rgba(226, 200, 143, .14)",
+        "--muted": "#8b857b",
+        "--paper": "#0b0b0c",
+        "--paper-deep": "#17171a",
+        "--paper-light": "#121214",
+        "--white": "#f6f2ea"
+      }
+    }
+  }
+}
