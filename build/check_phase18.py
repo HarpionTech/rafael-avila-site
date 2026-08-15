@@ -12,6 +12,7 @@ nao leem segredos, nao fazem chamadas autenticadas e nao acessam o site publicad
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import socket
 import shutil
@@ -24,6 +25,8 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Callable, Iterable
+from urllib.error import HTTPError, URLError
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,6 +46,8 @@ GROUPS = (
     "performance",
 )
 LIGHTHOUSE_TIMEOUT_SECONDS = 180
+LIVE_TIMEOUT_SECONDS = 12
+MAX_REDIRECTS = 8
 
 
 @dataclass(frozen=True)
@@ -947,6 +952,151 @@ def browser_checks(root: Path) -> int:
                 server.wait(timeout=5)
 
 
+class RedirectTrace(HTTPRedirectHandler):
+    """Registra a cadeia e recusa loops ou cadeias acima do teto operacional."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.chain: list[tuple[int, str, str]] = []
+
+    def redirect_request(self, request, file_pointer, code, message, headers, new_url):
+        self.chain.append((code, request.full_url, new_url))
+        if len(self.chain) > MAX_REDIRECTS:
+            raise HTTPError(request.full_url, 508, "limite de redirects excedido", headers, file_pointer)
+        return super().redirect_request(request, file_pointer, code, message, headers, new_url)
+
+
+def fetch_with_trace(url: str) -> tuple[int, str, list[tuple[int, str, str]]]:
+    """Consulta URL publica com timeout, user-agent explicito e fallback GET."""
+
+    last_error: Exception | None = None
+    for method in ("HEAD", "GET"):
+        trace = RedirectTrace()
+        opener = build_opener(trace)
+        request = Request(url, method=method, headers={"User-Agent": "Phase18SEOCheck/1.0"})
+        try:
+            with opener.open(request, timeout=LIVE_TIMEOUT_SECONDS) as response:
+                return response.status, response.geturl(), trace.chain
+        except HTTPError as exc:
+            last_error = exc
+            if method == "HEAD" and exc.code in {403, 405, 501}:
+                continue
+            raise
+        except URLError as exc:
+            last_error = exc
+            raise
+    raise RuntimeError(str(last_error or "request sem resposta"))
+
+
+def format_redirect_chain(start: str, chain: list[tuple[int, str, str]], final: str) -> str:
+    steps = [start]
+    steps.extend(f"--{code}--> {target}" for code, _, target in chain)
+    if not chain or chain[-1][2] != final:
+        steps.append(f"--> {final}")
+    return " ".join(steps)
+
+
+def local_seo_http_checks(root: Path) -> list[str]:
+    """Valida os documentos e o asset pela mesma camada HTTP usada no deploy."""
+
+    failures: list[str] = []
+    host, port = "127.0.0.1", 8765
+    server: subprocess.Popen[bytes] | None = None
+    try:
+        if not wait_for_local_server(host, port, timeout=0.3):
+            server_code = (
+                "import http.server,sys; "
+                "http.server.SimpleHTTPRequestHandler.extensions_map['.webp']='image/webp'; "
+                "http.server.ThreadingHTTPServer(('127.0.0.1',int(sys.argv[1])),"
+                "http.server.SimpleHTTPRequestHandler).serve_forever()"
+            )
+            server = subprocess.Popen(
+                [sys.executable, "-c", server_code, str(port)],
+                cwd=root,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            if not wait_for_local_server(host, port):
+                return ["servidor local nao respondeu em 10 s"]
+
+        base = f"http://{host}:{port}"
+        responses: dict[str, tuple[str, bytes]] = {}
+        for route in ("/", "/robots.txt", "/sitemap.xml", f"/{SOCIAL_PATH.as_posix()}"):
+            try:
+                with urlopen(f"{base}{route}", timeout=10) as response:
+                    body = response.read()
+                    content_type = response.headers.get_content_type()
+                    if response.status != 200:
+                        failures.append(f"{route}: HTTP {response.status}")
+                    responses[route] = (content_type, body)
+            except (HTTPError, URLError, TimeoutError) as exc:
+                failures.append(f"{route}: {exc}")
+
+        if home := responses.get("/"):
+            html = home[1].decode("utf-8", errors="replace")
+            for token in (CANONICAL, SOCIAL_URL, "og:image:width", "twitter:image:alt", '"@graph"'):
+                if token not in html:
+                    failures.append(f"/: metadado ausente: {token}")
+        if robots := responses.get("/robots.txt"):
+            if f"Sitemap: {CANONICAL}sitemap.xml" not in robots[1].decode("utf-8", errors="replace"):
+                failures.append("/robots.txt: sitemap canonico ausente")
+        if sitemap_response := responses.get("/sitemap.xml"):
+            sitemap_text = sitemap_response[1].decode("utf-8", errors="replace")
+            if f"<loc>{CANONICAL}</loc>" not in sitemap_text or f"<loc>{CANONICAL}politica.html</loc>" not in sitemap_text:
+                failures.append("/sitemap.xml: paginas canonicas divergentes")
+        if social := responses.get(f"/{SOCIAL_PATH.as_posix()}"):
+            try:
+                from PIL import Image
+
+                with Image.open(io.BytesIO(social[1])) as image:
+                    dimensions = image.size
+                    image_format = image.format
+                if social[0] != "image/webp":
+                    failures.append(f"/{SOCIAL_PATH.as_posix()}: MIME {social[0]!r}; esperado image/webp")
+                if dimensions != (1200, 630) or image_format != "WEBP":
+                    failures.append(f"/{SOCIAL_PATH.as_posix()}: {dimensions} {image_format}; esperado 1200x630 WEBP")
+            except (ImportError, OSError) as exc:
+                failures.append(f"/{SOCIAL_PATH.as_posix()}: imagem invalida: {exc}")
+    finally:
+        if server is not None:
+            server.terminate()
+            try:
+                server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait(timeout=5)
+    return failures
+
+
+def live_redirect_checks(root: Path) -> int:
+    """Confirma edge publico e documentos locais sem exigir deploy do novo head."""
+
+    failures = local_seo_http_checks(root)
+    variants = (
+        "http://rafaelavilaterapeuta.com.br",
+        "http://www.rafaelavilaterapeuta.com.br",
+        "https://www.rafaelavilaterapeuta.com.br",
+        CANONICAL,
+    )
+    for variant in variants:
+        try:
+            status, final, chain = fetch_with_trace(variant)
+            diagnostic = format_redirect_chain(variant, chain, final)
+            print(f"[live-redirects] {diagnostic} [{status}]")
+            if status != 200 or final != CANONICAL:
+                failures.append(f"{variant}: esperado {CANONICAL} [200]; obtido {final} [{status}]; cadeia: {diagnostic}")
+        except (HTTPError, URLError, TimeoutError, RuntimeError) as exc:
+            failures.append(f"{variant}: {exc}")
+
+    if failures:
+        print(f"[live-redirects] FAIL — {len(failures)} ocorrencia(s)")
+        for failure in failures:
+            print(f"  [live-redirects] {failure}")
+        return 1
+    print("[live-redirects] PASS — edge converge ao HTTPS apex e SEO local responde por HTTP")
+    return 0
+
+
 def lighthouse_checks(root: Path) -> int:
     """Executa o LHCI local com teto operacional e encerra sua arvore ao excede-lo."""
 
@@ -988,6 +1138,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--self-test", action="store_true", help="injeta uma regressao temporaria e exige falha acionavel")
     parser.add_argument("--browser", action="store_true", help="executa smoke test local com Playwright/Chromium")
     parser.add_argument("--lighthouse", action="store_true", help=f"executa Lighthouse CI com timeout de {LIGHTHOUSE_TIMEOUT_SECONDS} s")
+    parser.add_argument("--live-redirects", action="store_true", help="valida edge publico com timeout e SEO no servidor local")
     return parser
 
 
@@ -1000,6 +1151,8 @@ def main() -> int:
     if args.lighthouse:
         return lighthouse_checks(ROOT)
     _, code = run_groups(ROOT, selected_groups(args.group))
+    if args.live_redirects:
+        return code or live_redirect_checks(ROOT)
     return code
 
 
