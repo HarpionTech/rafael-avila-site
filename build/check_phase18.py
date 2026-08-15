@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import re
 import socket
 import shutil
 import subprocess
@@ -27,6 +28,12 @@ from pathlib import Path
 from typing import Callable, Iterable
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -574,24 +581,207 @@ def check_resilience(root: Path, results: Results) -> None:
 
 def check_network(root: Path, results: Results) -> None:
     group = "network"
+    prohibited_tokens = (
+        "googletagmanager.com",
+        "google-analytics.com",
+        "analytics.google.com",
+        "doubleclick.net",
+        "connect.facebook.net",
+        "facebook.com/tr",
+        "graph.facebook.com",
+        "fbq(",
+        "gtag(",
+    )
     for filename in ("index.html", "politica.html"):
         path = root / filename
         try:
             html = path.read_text(encoding="utf-8")
             results.assert_true(group, filename, "sem URL HTTP insegura", "http://" not in html, "URL http:// encontrada no documento")
+            matches = [token for token in prohibited_tokens if token in html.lower()]
+            results.assert_true(
+                group,
+                filename,
+                "sem tag Google ou Meta embutida",
+                not matches,
+                f"tokens encontrados: {matches!r}",
+            )
         except OSError as exc:
             results.assert_true(group, filename, "arquivo legivel", False, str(exc))
+
+    for scenario, failures in network_browser_scenarios(root, prohibited_tokens).items():
+        results.assert_true(
+            group,
+            f"browser:{scenario}",
+            "zero requests Google/Meta antes do consentimento",
+            not failures,
+            "; ".join(failures),
+        )
+
+
+def network_browser_scenarios(root: Path, prohibited_tokens: tuple[str, ...]) -> dict[str, list[str]]:
+    """Observa e bloqueia requests de medicao em contextos sem escolha persistida."""
+
+    failures: dict[str, list[str]] = {"pre-consent": []}
+    try:
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import Route, sync_playwright
+    except ImportError:
+        return {"preflight": ["Playwright Python nao esta instalado"]}
+
+    host, port = "127.0.0.1", 8765
+    server: subprocess.Popen[bytes] | None = None
+    try:
+        if not wait_for_local_server(host, port, timeout=0.3):
+            server = subprocess.Popen(
+                [sys.executable, "-m", "http.server", str(port), "--bind", host],
+                cwd=root,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            if not wait_for_local_server(host, port):
+                return {"preflight": ["servidor local nao respondeu em 10 s"]}
+
+        with sync_playwright() as playwright:
+            try:
+                browser = playwright.chromium.launch(headless=True)
+            except PlaywrightError:
+                return {"preflight": ["Chromium do Playwright indisponivel"]}
+
+            try:
+                for pathname in ("/", "/politica.html"):
+                    context = browser.new_context(viewport={"width": 390, "height": 844})
+
+                    def inspect_request(route: Route) -> None:
+                        request_url = route.request.url
+                        if any(token in request_url.lower() for token in prohibited_tokens):
+                            failures["pre-consent"].append(f"{pathname}: {request_url}")
+                            route.abort()
+                        else:
+                            route.continue_()
+
+                    context.route("**/*", inspect_request)
+                    page = context.new_page()
+                    response = page.goto(
+                        f"http://{host}:{port}{pathname}",
+                        wait_until="load",
+                        timeout=20_000,
+                    )
+                    page.wait_for_timeout(750)
+                    if response is None or not response.ok:
+                        status = "sem resposta" if response is None else str(response.status)
+                        failures["pre-consent"].append(f"{pathname}: HTTP {status}")
+                    context.close()
+            finally:
+                browser.close()
+    except PlaywrightError as exc:
+        failures.setdefault("preflight", []).append(str(exc).splitlines()[0])
+    finally:
+        if server is not None:
+            server.terminate()
+            try:
+                server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait(timeout=5)
+    return failures
 
 
 def check_cache(root: Path, results: Results) -> None:
     group = "cache"
+    max_age_pattern = re.compile(r"max-age\s*=\s*(\d+)", re.IGNORECASE)
     for filename in ("index.html", "politica.html", "robots.txt", "sitemap.xml"):
         path = root / filename
         try:
             text = path.read_text(encoding="utf-8")
             results.assert_true(group, filename, "sem cache imutavel embutido no documento", "immutable" not in text.lower(), "diretiva immutable pertence apenas a assets versionados")
+            max_ages = [int(value) for value in max_age_pattern.findall(text)]
+            results.assert_true(
+                group,
+                filename,
+                "cache documental no maximo 86400 s",
+                all(value <= 86400 for value in max_ages),
+                f"max-age encontrados: {max_ages!r}",
+            )
+
+            if filename.endswith(".html"):
+                parser = parse_html(path, group, results, root)
+                http_equiv = [attrs.get("http-equiv") for attrs in parser.tags("meta")] if parser else []
+                results.assert_true(
+                    group,
+                    filename,
+                    "sem cache via meta http-equiv",
+                    not any(http_equiv),
+                    f"http-equiv encontrados: {http_equiv!r}",
+                )
         except OSError as exc:
             results.assert_true(group, filename, "arquivo legivel", False, str(exc))
+
+    cache_api_patterns = {
+        "service worker": re.compile(r"(?:navigator\s*\.\s*)?serviceWorker\s*\.\s*register", re.IGNORECASE),
+        "Cache API": re.compile(r"(?:window\s*\.\s*)?caches\s*\.\s*(?:open|match|keys|delete)", re.IGNORECASE),
+    }
+    first_party_sources = [root / "index.html", root / "politica.html", *sorted((root / "assets/js").glob("*.js"))]
+    for path in first_party_sources:
+        try:
+            source = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            results.assert_true(group, relpath(path, root), "fonte legivel", False, str(exc))
+            continue
+        matches = [name for name, pattern in cache_api_patterns.items() if pattern.search(source)]
+        results.assert_true(
+            group,
+            relpath(path, root),
+            "sem service worker ou Cache API",
+            not matches,
+            f"mecanismos encontrados: {matches!r}",
+        )
+
+    config_names = {
+        "_headers",
+        ".htaccess",
+        "firebase.json",
+        "netlify.toml",
+        "vercel.json",
+        "wrangler.toml",
+    }
+    try:
+        tracked = subprocess.run(
+            ["git", "ls-files", "-z"],
+            cwd=root,
+            capture_output=True,
+            check=True,
+            timeout=20,
+        ).stdout.decode("utf-8").split("\0")
+    except (OSError, subprocess.SubprocessError, UnicodeDecodeError) as exc:
+        results.assert_true(group, ".git", "lista de configuracoes versionadas", False, str(exc))
+        tracked = []
+
+    for relative in tracked:
+        if not relative:
+            continue
+        candidate = Path(relative)
+        lower_name = candidate.name.lower()
+        is_cache_config = lower_name in config_names or (
+            candidate.suffix.lower() in {".json", ".toml", ".yaml", ".yml"}
+            and any(token in lower_name for token in ("cache", "header", "cloudflare"))
+        )
+        if not is_cache_config:
+            continue
+        try:
+            config_text = (root / candidate).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        route_lines = {line.strip().split()[0] for line in config_text.splitlines() if line.strip().startswith("/")}
+        document_scope = bool(route_lines & {"/", "/*", "/politica.html", "/robots.txt", "/sitemap.xml"})
+        long_max_ages = [int(value) for value in max_age_pattern.findall(config_text) if int(value) > 86400]
+        dangerous = "immutable" in config_text.lower() or bool(long_max_ages)
+        results.assert_true(
+            group,
+            relative,
+            "config nao aplica cache longo a documentos",
+            not (document_scope and dangerous),
+            f"rotas={sorted(route_lines)!r}; max-age longos={long_max_ages!r}; immutable={'immutable' in config_text.lower()}",
+        )
 
 
 def load_baseline(root: Path, results: Results) -> dict | None:
@@ -640,6 +830,61 @@ def check_performance(root: Path, results: Results) -> None:
             valid = False
         dotted = ".".join(keys)
         results.assert_true(group, label, dotted, valid, f"esperado {value!r}; encontrado {cursor!r}")
+
+    lighthouse_dir = root / "build/_lighthouse"
+    manifest_path = lighthouse_dir / "manifest.json"
+    if not manifest_path.exists():
+        print("[performance] INFO — manifest Lighthouse ausente; check:phase18 compara deltas apos o LHCI")
+        return
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        results.assert_true(group, relpath(manifest_path, root), "manifest Lighthouse legivel", False, str(exc))
+        return
+
+    representatives = [entry for entry in manifest if isinstance(entry, dict) and entry.get("isRepresentativeRun")]
+    expected_urls = {
+        "http://127.0.0.1:8765/",
+        "http://127.0.0.1:8765/politica.html",
+    }
+    found_urls = {entry.get("url") for entry in representatives}
+    results.assert_true(
+        group,
+        relpath(manifest_path, root),
+        "relatorios representativos das duas paginas",
+        found_urls == expected_urls,
+        f"esperado: {sorted(expected_urls)!r}; encontrado: {sorted(str(url) for url in found_urls)!r}",
+    )
+
+    baseline_score = payload["observed"]["scores"]["performance"]
+    baseline_metrics = payload["observed"]["metrics"]
+    for entry in representatives:
+        report_path = Path(str(entry.get("jsonPath", "")))
+        if not report_path.exists():
+            report_path = lighthouse_dir / report_path.name
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            score = round(float(report["categories"]["performance"]["score"]) * 100)
+            audits = report["audits"]
+            metrics = {
+                "lcpMs": float(audits["largest-contentful-paint"]["numericValue"]),
+                "tbtMs": float(audits["total-blocking-time"]["numericValue"]),
+                "cls": float(audits["cumulative-layout-shift"]["numericValue"]),
+            }
+        except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+            results.assert_true(group, relpath(report_path, root), "relatorio Lighthouse parseavel", False, str(exc))
+            continue
+
+        results.assert_true(group, relpath(report_path, root), "relatorio Lighthouse parseavel", True, "")
+        url = str(entry.get("url"))
+        print(
+            "[performance] INFO — "
+            f"{url}: Performance {score} ({score - baseline_score:+d}); "
+            f"LCP {metrics['lcpMs']:.0f} ms ({metrics['lcpMs'] - baseline_metrics['lcpMs']:+.0f}); "
+            f"TBT {metrics['tbtMs']:.0f} ms ({metrics['tbtMs'] - baseline_metrics['tbtMs']:+.0f}); "
+            f"CLS {metrics['cls']:.3f} ({metrics['cls'] - baseline_metrics['cls']:+.3f})"
+        )
 
 
 CHECKERS: dict[str, Callable[[Path, Results], None]] = {
@@ -1065,6 +1310,15 @@ def fetch_with_trace(url: str) -> tuple[int, str, list[tuple[int, str, str]]]:
     raise RuntimeError(str(last_error or "request sem resposta"))
 
 
+def fetch_head_headers(url: str) -> tuple[int, str, dict[str, str]]:
+    """Faz HEAD seguindo redirects e devolve headers normalizados."""
+
+    request = Request(url, method="HEAD", headers={"User-Agent": "Phase18CacheCheck/1.0"})
+    with urlopen(request, timeout=LIVE_TIMEOUT_SECONDS) as response:
+        headers = {key.lower(): value for key, value in response.headers.items()}
+        return response.status, response.geturl(), headers
+
+
 def format_redirect_chain(start: str, chain: list[tuple[int, str, str]], final: str) -> str:
     steps = [start]
     steps.extend(f"--{code}--> {target}" for code, _, target in chain)
@@ -1174,6 +1428,43 @@ def live_redirect_checks(root: Path) -> int:
     return 0
 
 
+def live_cache_checks() -> int:
+    """Audita apenas o teto documental; demais headers ficam como evidencia da Phase 22."""
+
+    failures: list[str] = []
+    max_age_pattern = re.compile(r"max-age\s*=\s*(\d+)", re.IGNORECASE)
+    routes = ("/", "/politica.html", "/robots.txt", "/sitemap.xml")
+    for route in routes:
+        url = f"{CANONICAL_ORIGIN}{route}"
+        try:
+            status, final, headers = fetch_head_headers(url)
+        except (HTTPError, URLError, TimeoutError) as exc:
+            failures.append(f"{url}: {exc}")
+            continue
+
+        cache_control = headers.get("cache-control", "")
+        max_ages = [int(value) for value in max_age_pattern.findall(cache_control)]
+        diagnostic = {
+            key: headers.get(key, "<ausente>")
+            for key in ("cache-control", "age", "etag", "last-modified", "cf-cache-status")
+        }
+        print(f"[live-cache] {route} [{status}] -> {final} {json.dumps(diagnostic, ensure_ascii=False)}")
+        if status != 200:
+            failures.append(f"{url}: HTTP {status}")
+        if "immutable" in cache_control.lower():
+            failures.append(f"{url}: documento marcado immutable")
+        if any(value > 86400 for value in max_ages):
+            failures.append(f"{url}: max-age acima de 86400 s: {max_ages!r}")
+
+    if failures:
+        print(f"[live-cache] FAIL — {len(failures)} ocorrencia(s)")
+        for failure in failures:
+            print(f"  [live-cache] {failure}")
+        return 1
+    print("[live-cache] PASS — documentos publicos respeitam o teto de 86400 s")
+    return 0
+
+
 def lighthouse_checks(root: Path) -> int:
     """Executa o LHCI local com teto operacional e encerra sua arvore ao excede-lo."""
 
@@ -1212,10 +1503,12 @@ def lighthouse_checks(root: Path) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Executa os checks locais da Phase 18.")
     parser.add_argument("--group", action="append", choices=(*GROUPS, "all"), default=[], help="grupo repetivel; padrao: all")
+    parser.add_argument("--all", action="store_true", help="executa explicitamente todos os oito grupos")
     parser.add_argument("--self-test", action="store_true", help="injeta uma regressao temporaria e exige falha acionavel")
     parser.add_argument("--browser", action="store_true", help="executa smoke test local com Playwright/Chromium")
     parser.add_argument("--lighthouse", action="store_true", help=f"executa Lighthouse CI com timeout de {LIGHTHOUSE_TIMEOUT_SECONDS} s")
     parser.add_argument("--live-redirects", action="store_true", help="valida edge publico com timeout e SEO no servidor local")
+    parser.add_argument("--live-cache", action="store_true", help="faz HEAD nos quatro documentos publicos e bloqueia cache acima de 86400 s")
     return parser
 
 
@@ -1227,9 +1520,11 @@ def main() -> int:
         return browser_checks(ROOT)
     if args.lighthouse:
         return lighthouse_checks(ROOT)
-    _, code = run_groups(ROOT, selected_groups(args.group))
+    _, code = run_groups(ROOT, selected_groups(["all"] if args.all else args.group))
     if args.live_redirects:
-        return code or live_redirect_checks(ROOT)
+        code = max(code, live_redirect_checks(ROOT))
+    if args.live_cache:
+        code = max(code, live_cache_checks())
     return code
 
 

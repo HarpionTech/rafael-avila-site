@@ -7,13 +7,14 @@
     "node": "24.x"
   },
   "scripts": {
-    "serve": "python -m http.server 8765 --bind 127.0.0.1",
-    "setup:browser": "python -m playwright install chromium",
-    "check:static": "python build/check_phase18.py",
-    "check:browser": "python build/check_phase18.py --browser",
-    "check:lh": "python build/check_phase18.py --lighthouse",
+    "serve": "python -u -m http.server 8765 --bind 127.0.0.1",
+    "setup:browser": "python -u -m playwright install chromium",
+    "check:static": "python -u build/check_phase18.py",
+    "check:browser": "python -u build/check_phase18.py --browser",
+    "check:lh": "python -u build/check_phase18.py --lighthouse",
     "check:lh:core": "lhci autorun --config=./lighthouserc.json",
-    "check:phase18": "npm run check:static && npm run check:browser && npm run check:lh"
+    "check:performance": "python -u build/check_phase18.py --group performance",
+    "check:phase18": "npm run check:static && npm run check:browser && npm run check:lh && npm run check:performance"
   },
   "devDependencies": {
     "@lhci/cli": "0.15.1"
