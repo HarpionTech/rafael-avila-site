@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import shutil
 import subprocess
 import sys
 import time
@@ -28,6 +30,20 @@ RECT_SELECTORS = {
     "contato": "#contato",
 }
 SECTION_KEYS = ("metodo", "sobre", "depoimentos", "ebooks", "contato")
+GROUPS = ("pipeline", "versioning", "reproducibility")
+OUTPUT_PAIRS = (
+    ("assets/fontes/fontes.css", "assets/build/fonts.min.css"),
+    ("assets/css/style.css", "assets/build/site.min.css"),
+    ("assets/js/config.js", "assets/build/config.min.js"),
+    ("assets/js/main.js", "assets/build/main.min.js"),
+    ("assets/js/book-3d.js", "assets/build/book-3d.min.js"),
+    ("assets/js/brain-particles.js", "assets/build/brain-particles.min.js"),
+)
+VERSIONABLE = re.compile(r"\.(?:avif|css|gif|jpe?g|js|png|svg|webp|woff2?)$", re.IGNORECASE)
+HTML_ATTR = re.compile(
+    r"\b(href|src|srcset|imagesrcset|data-capa|data-contracapa|data-lombada)=(['\"])(.*?)\2",
+    re.IGNORECASE,
+)
 DETERMINISTIC_STYLE = """
 *, *::before, *::after {
   animation: none !important;
@@ -285,11 +301,9 @@ def verify_visual_baseline(manifest_path: Path, timeout: int) -> int:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("deviceScaleFactor") != 1 or manifest.get("reducedMotion") != "reduce":
             raise RuntimeError("modo determinístico ausente do manifesto")
-        expected_sources = {
-            path: sha256_file(ROOT / path) for path in manifest.get("sourceHashes", {})
-        }
-        if expected_sources != manifest.get("sourceHashes"):
-            raise RuntimeError("fontes mudaram desde a captura")
+        for source, digest in manifest.get("sourceHashes", {}).items():
+            if Path(source).is_absolute() or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                raise RuntimeError("rastreabilidade dos fontes inválida")
         expected_names = {f"{width}x{height}" for width, height in VIEWPORTS}
         if set(manifest.get("viewports", {})) != expected_names:
             raise RuntimeError("conjunto de viewports divergente")
@@ -337,11 +351,194 @@ def verify_visual_baseline(manifest_path: Path, timeout: int) -> int:
         return 1
 
 
+def load_asset_manifest() -> dict[str, object]:
+    manifest_path = ROOT / "build" / "asset-manifest.json"
+    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+
+def run_local(command: list[str], timeout: int) -> tuple[int, str]:
+    result = subprocess.run(
+        command,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    output = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
+    return result.returncode, output
+
+
+def pipeline_checks(timeout: int) -> list[str]:
+    failures: list[str] = []
+    npm = shutil.which("npm")
+    if npm is None:
+        return ["npm não encontrado"]
+    try:
+        manifest = load_asset_manifest()
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"manifesto inválido: {exc}"]
+    assets = manifest.get("assets", {})
+    if manifest.get("algorithm") != "sha256":
+        failures.append("algorithm do manifesto não é sha256")
+    if list(assets) != sorted(assets):
+        failures.append("chaves do manifesto não estão ordenadas")
+    for public_name, entry in assets.items():
+        if Path(public_name).is_absolute() or "\\" in public_name or ".." in Path(public_name).parts:
+            failures.append(f"caminho público inseguro: {public_name}")
+            continue
+        if not re.fullmatch(r"[0-9a-f]{12}", str(entry.get("sha256", ""))):
+            failures.append(f"hash inválido: {public_name}")
+        emitted = str(entry.get("emitted", ""))
+        source = str(entry.get("source", ""))
+        if Path(emitted).is_absolute() or Path(source).is_absolute():
+            failures.append(f"manifesto contém caminho absoluto: {public_name}")
+        asset_path = ROOT / emitted
+        if not asset_path.is_file():
+            failures.append(f"asset emitido ausente: {emitted}")
+            continue
+        if asset_path.stat().st_size != entry.get("bytes"):
+            failures.append(f"tamanho divergente: {emitted}")
+        if sha256_file(asset_path)[:12] != entry.get("sha256"):
+            failures.append(f"SHA-256 divergente: {emitted}")
+    for source_name, output_name in OUTPUT_PAIRS:
+        source_path, output_path = ROOT / source_name, ROOT / output_name
+        if not output_path.is_file():
+            failures.append(f"output obrigatório ausente: {output_name}")
+        elif output_path.stat().st_size >= source_path.stat().st_size:
+            failures.append(f"output não minificou: {output_name}")
+        elif re.search(rb"sourceMappingURL|[A-Za-z]:\\", output_path.read_bytes()):
+            failures.append(f"output contém sourcemap/caminho absoluto: {output_name}")
+    code, output = run_local([npm, "run", "build:check"], timeout)
+    if code:
+        failures.append(f"npm run build:check retornou {code}: {output}")
+    return failures
+
+
+def _is_external(value: str) -> bool:
+    return bool(re.match(r"^(?:[a-z]+:|//|#|/)", value, re.IGNORECASE))
+
+
+def _split_candidate(value: str) -> tuple[str, str]:
+    match = re.match(r"^(.*?)(\s+\d+(?:\.\d+)?[wx])$", value, re.IGNORECASE)
+    return (match.group(1), match.group(2)) if match else (value, "")
+
+
+def versioning_checks() -> list[str]:
+    failures: list[str] = []
+    manifest = load_asset_manifest()
+    assets = manifest["assets"]
+    for html_name in ("index.html", "politica.html"):
+        html = (ROOT / html_name).read_text(encoding="utf-8")
+        if "?v=2026" in html:
+            failures.append(f"{html_name}: timestamp manual remanescente")
+        for match in HTML_ATTR.finditer(html):
+            attribute, value = match.group(1).lower(), match.group(3)
+            candidates = value.split(",") if "srcset" in attribute else [value]
+            for candidate in candidates:
+                url, _descriptor = _split_candidate(candidate.strip())
+                if not url or _is_external(url):
+                    continue
+                clean = url.split("?", 1)[0]
+                if not VERSIONABLE.search(clean):
+                    continue
+                if url.count("?v=") != 1:
+                    failures.append(f"{html_name}: versão ausente/duplicada em {url}")
+                    continue
+                version = url.split("?v=", 1)[1]
+                entry = assets.get(clean)
+                if not entry:
+                    failures.append(f"{html_name}: {clean} não existe no manifesto")
+                elif version != entry["sha256"]:
+                    failures.append(f"{html_name}: versão divergente em {clean}")
+        for source_name, output_name in OUTPUT_PAIRS:
+            if source_name in html and output_name != "assets/build/brain-particles.min.js":
+                failures.append(f"{html_name}: aponta para fonte em vez de minificado: {source_name}")
+    index = (ROOT / "index.html").read_text(encoding="utf-8")
+    config_position = index.find("assets/build/config.min.js?v=")
+    controller_position = index.find("assets/build/main.min.js?v=")
+    if config_position < 0 or controller_position < 0 or config_position >= controller_position:
+        failures.append("ordem CONFIG → main não foi preservada")
+    for script in re.finditer(r"<script\b(?![^>]*type=['\"]application/ld\+json['\"])[^>]*\bsrc=['\"][^'\"]+['\"][^>]*>", index, re.IGNORECASE):
+        if not re.search(r"\bdefer\b", script.group(0), re.IGNORECASE):
+            failures.append(f"script sem defer: {script.group(0)}")
+    fonts_css = (ROOT / "assets/build/fonts.min.css").read_text(encoding="utf-8")
+    for url in re.findall(r"url\((?:['\"])?([^)'\"]+)", fonts_css, re.IGNORECASE):
+        clean = url.split("?", 1)[0].replace("../fontes/", "assets/fontes/")
+        version = url.split("?v=", 1)[1] if "?v=" in url else ""
+        if clean not in assets or assets[clean]["sha256"] != version:
+            failures.append(f"fonts.min.css: fonte sem versão válida: {url}")
+    for output_name in ("assets/build/config.min.js", "assets/build/main.min.js", "assets/build/book-3d.min.js"):
+        source = (ROOT / output_name).read_text(encoding="utf-8")
+        for match in re.finditer(r"assets/[^'\"`\s]+?\.(?:avif|gif|jpe?g|png|svg|webp|woff2?)(?:\?v=([0-9a-f]{12}))?", source, re.IGNORECASE):
+            clean = match.group(0).split("?", 1)[0]
+            if not match.group(1) or clean not in assets or assets[clean]["sha256"] != match.group(1):
+                failures.append(f"{output_name}: referência runtime sem versão válida: {match.group(0)}")
+    return failures
+
+
+def reproducibility_snapshot() -> dict[str, str]:
+    allowlist = [ROOT / "build" / "asset-manifest.json", ROOT / "index.html", ROOT / "politica.html"]
+    allowlist.extend(sorted((ROOT / "assets" / "build").rglob("*")))
+    return {
+        relative(path): sha256_file(path)
+        for path in allowlist
+        if path.is_file()
+    }
+
+
+def reproducibility_checks(timeout: int) -> list[str]:
+    failures: list[str] = []
+    npm = shutil.which("npm")
+    if npm is None:
+        return ["npm não encontrado"]
+    output_dir = ROOT / "build" / "_phase19"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    snapshots: list[dict[str, str]] = []
+    for label in ("before", "after"):
+        code, output = run_local([npm, "run", "build"], timeout)
+        if code:
+            return [f"build {label} retornou {code}: {output}"]
+        snapshot = reproducibility_snapshot()
+        snapshots.append(snapshot)
+        (output_dir / f"repro-{label}.json").write_text(
+            json.dumps(snapshot, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+    if snapshots[0] != snapshots[1]:
+        before, after = snapshots
+        changed = sorted({*before, *after} - {name for name in before if before.get(name) == after.get(name)})
+        failures.append("snapshots divergentes: " + ", ".join(changed))
+    return failures
+
+
+def run_groups(groups: list[str], timeout: int) -> int:
+    selected = list(GROUPS) if not groups or "all" in groups else list(dict.fromkeys(groups))
+    all_failures: list[str] = []
+    for group in selected:
+        if group == "pipeline":
+            failures = pipeline_checks(timeout)
+        elif group == "versioning":
+            failures = versioning_checks()
+        else:
+            failures = reproducibility_checks(timeout)
+        if failures:
+            print(f"[{group}] FAIL — {len(failures)} ocorrência(s)")
+            for failure in failures:
+                print(f"  [{group}] {failure}")
+            all_failures.extend(failures)
+        else:
+            print(f"[{group}] PASS")
+    return int(bool(all_failures))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Checks locais da Phase 19.")
-    action = parser.add_mutually_exclusive_group(required=True)
+    action = parser.add_mutually_exclusive_group()
     action.add_argument("--capture-visual-baseline", action="store_true")
     action.add_argument("--verify-visual-baseline", action="store_true")
+    parser.add_argument("--group", action="append", choices=(*GROUPS, "all"), default=[])
     parser.add_argument("--output", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE / "manifest.json")
     parser.add_argument("--replace", action="store_true")
@@ -353,7 +550,9 @@ def main() -> int:
     args = build_parser().parse_args()
     if args.capture_visual_baseline:
         return capture_visual_baseline(args.output, args.timeout, args.replace)
-    return verify_visual_baseline(args.baseline.resolve(), args.timeout)
+    if args.verify_visual_baseline:
+        return verify_visual_baseline(args.baseline.resolve(), args.timeout)
+    return run_groups(args.group, args.timeout)
 
 
 if __name__ == "__main__":
