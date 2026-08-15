@@ -29,6 +29,9 @@ from typing import Callable, Iterable
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = Path("build/baseline-v1.6.json")
 CANONICAL = "https://rafaelavilaterapeuta.com.br/"
+CANONICAL_ORIGIN = CANONICAL.rstrip("/")
+SOCIAL_PATH = Path("assets/social/rafael-avila-1200x630.webp")
+SOCIAL_URL = f"{CANONICAL_ORIGIN}/{SOCIAL_PATH.as_posix()}"
 GROUPS = (
     "syntax",
     "raw-html",
@@ -259,17 +262,99 @@ def check_seo(root: Path, results: Results) -> None:
     group = "seo"
     index = parse_html(root / "index.html", group, results, root)
     if index is not None:
+        html = (root / "index.html").read_text(encoding="utf-8")
         results.assert_true(group, "index.html", "JSON-LD presente", bool(index.json_ld), "nenhum script application/ld+json")
+        json_documents: list[dict] = []
         for position, raw in enumerate(index.json_ld, start=1):
             try:
                 parsed = json.loads(raw)
                 valid = parsed.get("@context") == "https://schema.org"
                 results.assert_true(group, "index.html", f"JSON-LD #{position} parseavel e schema.org", valid, "@context ausente ou incorreto")
+                if isinstance(parsed, dict):
+                    json_documents.append(parsed)
             except (json.JSONDecodeError, AttributeError) as exc:
                 results.assert_true(group, "index.html", f"JSON-LD #{position} parseavel", False, str(exc))
 
         canonical_links = [attrs.get("href") for attrs in index.tags("link") if attrs.get("rel") == "canonical"]
         results.assert_true(group, "index.html", "canonical unico no apex HTTPS", canonical_links == [CANONICAL], f"encontrado: {canonical_links!r}")
+
+        social_meta = {
+            "property:og:url": CANONICAL,
+            "property:og:type": "website",
+            "property:og:title": "Você não precisa ser outra pessoa.",
+            "property:og:description": "Precisa aprender a lidar com quem você é. Terapia online com Rafael Ávila — breve, prática e objetiva.",
+            "property:og:image": SOCIAL_URL,
+            "property:og:image:secure_url": SOCIAL_URL,
+            "property:og:image:type": "image/webp",
+            "property:og:image:width": "1200",
+            "property:og:image:height": "630",
+            "property:og:image:alt": "Rafael Ávila, terapeuta comportamental, em retrato editorial.",
+            "name:twitter:card": "summary_large_image",
+            "name:twitter:title": "Você não precisa ser outra pessoa.",
+            "name:twitter:description": "Precisa aprender a lidar com quem você é. Terapia online com Rafael Ávila — breve, prática e objetiva.",
+            "name:twitter:image": SOCIAL_URL,
+            "name:twitter:image:alt": "Rafael Ávila, terapeuta comportamental, em retrato editorial.",
+        }
+        for selector, expected in social_meta.items():
+            attribute, key = selector.split(":", 1)
+            values = [attrs.get("content") for attrs in index.tags("meta") if attrs.get(attribute) == key]
+            results.assert_true(
+                group,
+                "index.html",
+                f"meta {key} unico e coerente",
+                values == [expected],
+                f"esperado: {[expected]!r}; encontrado: {values!r}",
+            )
+
+        graphs = [document.get("@graph") for document in json_documents]
+        graph = next((value for value in graphs if isinstance(value, list)), [])
+        typed_nodes = {
+            node.get("@type"): node
+            for node in graph
+            if isinstance(node, dict) and node.get("@type") in {"Person", "ProfessionalService"}
+        }
+        results.assert_true(
+            group,
+            "index.html",
+            "JSON-LD declara Person e ProfessionalService",
+            set(typed_nodes) == {"Person", "ProfessionalService"},
+            f"tipos encontrados: {sorted(typed_nodes)!r}",
+        )
+        for node_type in ("Person", "ProfessionalService"):
+            node = typed_nodes.get(node_type, {})
+            results.assert_true(
+                group,
+                "index.html",
+                f"JSON-LD {node_type} usa URL e imagem canonicas",
+                node.get("url") == CANONICAL and node.get("image") == SOCIAL_URL,
+                f"url={node.get('url')!r}; image={node.get('image')!r}",
+            )
+        person = typed_nodes.get("Person", {})
+        service = typed_nodes.get("ProfessionalService", {})
+        instagram = "https://www.instagram.com/rafa.aviila/"
+        whatsapp = "https://wa.me/5548991947402"
+        results.assert_true(
+            group,
+            "index.html",
+            "JSON-LD referencia links visiveis",
+            instagram in person.get("sameAs", [])
+            and instagram in html
+            and service.get("potentialAction", {}).get("target") == whatsapp
+            and whatsapp in html,
+            "Instagram ou WhatsApp divergente do HTML visivel",
+        )
+
+    social_file = root / SOCIAL_PATH
+    try:
+        from PIL import Image
+
+        with Image.open(social_file) as image:
+            dimensions = image.size
+            image_format = image.format
+        results.assert_true(group, SOCIAL_PATH.as_posix(), "WebP 1200x630 valido", dimensions == (1200, 630) and image_format == "WEBP", f"dimensao={dimensions}; formato={image_format}")
+        results.assert_true(group, SOCIAL_PATH.as_posix(), "peso maximo de 300 KiB", social_file.stat().st_size <= 300 * 1024, f"{social_file.stat().st_size} bytes")
+    except (ImportError, OSError) as exc:
+        results.assert_true(group, SOCIAL_PATH.as_posix(), "imagem social legivel", False, str(exc))
 
     robots_path = root / "robots.txt"
     try:
@@ -286,8 +371,54 @@ def check_seo(root: Path, results: Results) -> None:
         urls = [node.text for node in xml_root.findall("s:url/s:loc", namespace)]
         results.assert_true(group, "sitemap.xml", "XML parseavel com home canonica", CANONICAL in urls, f"URLs: {urls!r}")
         results.assert_true(group, "sitemap.xml", "somente URLs HTTPS do apex", bool(urls) and all(url.startswith(CANONICAL) for url in urls), f"URLs: {urls!r}")
+        results.assert_true(group, "sitemap.xml", "paginas canonicas exatas", urls == [CANONICAL, f"{CANONICAL}politica.html"], f"URLs: {urls!r}")
     except (OSError, ET.ParseError) as exc:
         results.assert_true(group, "sitemap.xml", "XML parseavel", False, str(exc))
+
+    with tempfile.TemporaryDirectory(prefix="phase18-seo-") as temp:
+        fixture_root = Path(temp)
+        (fixture_root / "build").mkdir(parents=True)
+        for relative in (Path("index.html"), Path("robots.txt"), Path("sitemap.xml"), Path("build/seo.py")):
+            destination = fixture_root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(root / relative, destination)
+        command = [sys.executable, str(fixture_root / "build/seo.py"), CANONICAL_ORIGIN]
+        try:
+            first = subprocess.run(command, cwd=fixture_root, capture_output=True, text=True, timeout=20, check=False)
+            snapshot = {
+                relative: (fixture_root / relative).read_bytes()
+                for relative in (Path("index.html"), Path("robots.txt"), Path("sitemap.xml"))
+            }
+            second = subprocess.run(command, cwd=fixture_root, capture_output=True, text=True, timeout=20, check=False)
+            repeated = {
+                relative: (fixture_root / relative).read_bytes()
+                for relative in (Path("index.html"), Path("robots.txt"), Path("sitemap.xml"))
+            }
+            generated_html = snapshot[Path("index.html")].decode("utf-8")
+            required_tokens = (SOCIAL_URL, "og:image:width", "twitter:image:alt", '"@graph"')
+            results.assert_true(
+                group,
+                "build/seo.py",
+                "gerador executa duas vezes",
+                first.returncode == 0 and second.returncode == 0,
+                (first.stderr or second.stderr or first.stdout or second.stdout).strip(),
+            )
+            results.assert_true(
+                group,
+                "build/seo.py",
+                "geracao idempotente",
+                snapshot == repeated,
+                "segunda execucao alterou index.html, robots.txt ou sitemap.xml",
+            )
+            results.assert_true(
+                group,
+                "build/seo.py",
+                "gerador preserva metadados sociais completos",
+                all(token in generated_html for token in required_tokens) and "/assets/perfil.png" not in generated_html,
+                "asset social, dimensoes, Twitter ou JSON-LD divergiram apos gerar",
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            results.assert_true(group, "build/seo.py", "gerador testavel em copia temporaria", False, str(exc))
 
 
 def check_accessibility(root: Path, results: Results) -> None:
