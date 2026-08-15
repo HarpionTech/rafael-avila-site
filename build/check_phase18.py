@@ -161,7 +161,8 @@ def check_syntax(root: Path, results: Results) -> None:
 def check_raw_html(root: Path, results: Results) -> None:
     group = "raw-html"
     for filename in ("index.html", "politica.html"):
-        parser = parse_html(root / filename, group, results, root)
+        path = root / filename
+        parser = parse_html(path, group, results, root)
         if parser is None:
             continue
         results.assert_true(
@@ -173,6 +174,85 @@ def check_raw_html(root: Path, results: Results) -> None:
         )
         tag_names = {tag for tag, _ in parser.start_tags}
         results.assert_true(group, filename, "estrutura html/head/body", {"html", "head", "body"} <= tag_names, "tags obrigatorias ausentes")
+
+        if filename != "index.html":
+            continue
+
+        html = path.read_text(encoding="utf-8")
+        section_ids = {
+            attrs.get("id")
+            for tag, attrs in parser.start_tags
+            if tag == "section"
+        }
+        results.assert_true(
+            group,
+            filename,
+            "secoes canonicas presentes",
+            {"metodo", "sobre", "depoimentos", "ebooks", "contato"} <= section_ids,
+            f"ids encontrados: {sorted(value for value in section_ids if value)!r}",
+        )
+
+        for section_id in ("metodo", "sobre", "depoimentos", "ebooks", "contato"):
+            marker = f'id="{section_id}"'
+            start = html.find(marker)
+            end = html.find("</section>", start)
+            body = html[start:end] if start >= 0 and end > start else ""
+            results.assert_true(
+                group,
+                filename,
+                f"secao #{section_id} materializada",
+                bool(body) and "<h2" in body and len(body) > 300,
+                "esperado heading e conteudo substancial no HTML bruto",
+            )
+
+        footer_start = html.find('<footer class="footer"')
+        footer_end = html.find("</footer>", footer_start)
+        footer = html[footer_start:footer_end] if footer_start >= 0 and footer_end > footer_start else ""
+        results.assert_true(
+            group,
+            filename,
+            "rodape materializado",
+            "Preferências de cookies" in footer and "politica.html" in footer and len(footer) > 500,
+            "rodape canonico ausente ou incompleto",
+        )
+
+        results.assert_true(
+            group,
+            filename,
+            "sem shells data-render",
+            "data-render=" not in html,
+            "conteudo ainda depende dos renderers client-side",
+        )
+
+        essential_links = [
+            attrs
+            for tag, attrs in parser.start_tags
+            if tag == "a" and (
+                "data-wa" in attrs
+                or "hotmart.com" in (attrs.get("href") or "")
+                or "instagram.com" in (attrs.get("href") or "")
+                or (attrs.get("href") or "").endswith("politica.html")
+            )
+        ]
+        invalid_links = [attrs.get("href") for attrs in essential_links if (attrs.get("href") or "") in ("", "#")]
+        results.assert_true(
+            group,
+            filename,
+            "destinos essenciais reais",
+            len(essential_links) >= 15 and not invalid_links,
+            f"esperados WhatsApp, Hotmart, Instagram e politica; invalidos: {invalid_links!r}; total: {len(essential_links)}",
+        )
+
+        noscript_start = html.find("<noscript>", html.find("</main>"))
+        noscript_end = html.find("</noscript>", noscript_start)
+        noscript = html[noscript_start:noscript_end] if noscript_start >= 0 and noscript_end > noscript_start else ""
+        results.assert_true(
+            group,
+            filename,
+            "noscript nao condiciona o conteudo",
+            "Ative o JavaScript" not in noscript and "conteúdo completo" not in noscript,
+            "fallback ainda afirma que o conteudo depende de JavaScript",
+        )
 
 
 def check_seo(root: Path, results: Results) -> None:
