@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BASELINE = Path("build/baseline-v1.6.json")
 CANONICAL = "https://rafaelavilaterapeuta.com.br/"
 CANONICAL_ORIGIN = CANONICAL.rstrip("/")
+POLICY_CANONICAL = f"{CANONICAL}politica.html"
 SOCIAL_PATH = Path("assets/social/rafael-avila-1200x630.webp")
 SOCIAL_URL = f"{CANONICAL_ORIGIN}/{SOCIAL_PATH.as_posix()}"
 GROUPS = (
@@ -347,6 +348,82 @@ def check_seo(root: Path, results: Results) -> None:
             and service.get("potentialAction", {}).get("target") == whatsapp
             and whatsapp in html,
             "Instagram ou WhatsApp divergente do HTML visivel",
+        )
+
+    policy_path = root / "politica.html"
+    policy = parse_html(policy_path, group, results, root)
+    if policy is not None:
+        policy_html = policy_path.read_text(encoding="utf-8")
+        policy_head = policy_html.split("</head>", 1)[0]
+        policy_title = "Política de Privacidade — Rafael Ávila"
+        policy_description = (
+            "Como o site de Rafael Ávila trata dados pessoais, cookies, "
+            "serviços externos e os direitos previstos na LGPD."
+        )
+        policy_alt = "Rafael Ávila, terapeuta comportamental, em retrato editorial."
+
+        results.assert_true(
+            group,
+            "politica.html",
+            "title proprio da politica",
+            f"<title>{policy_title}</title>" in policy_head,
+            "title institucional especifico ausente ou divergente",
+        )
+
+        policy_meta = {
+            "name:description": policy_description,
+            "name:robots": "index,follow",
+            "property:og:type": "website",
+            "property:og:url": POLICY_CANONICAL,
+            "property:og:title": policy_title,
+            "property:og:description": policy_description,
+            "property:og:image": SOCIAL_URL,
+            "property:og:image:secure_url": SOCIAL_URL,
+            "property:og:image:type": "image/webp",
+            "property:og:image:width": "1200",
+            "property:og:image:height": "630",
+            "property:og:image:alt": policy_alt,
+            "name:twitter:card": "summary_large_image",
+            "name:twitter:title": policy_title,
+            "name:twitter:description": policy_description,
+            "name:twitter:image": SOCIAL_URL,
+            "name:twitter:image:alt": policy_alt,
+        }
+        for selector, expected in policy_meta.items():
+            attribute, key = selector.split(":", 1)
+            values = [attrs.get("content") for attrs in policy.tags("meta") if attrs.get(attribute) == key]
+            results.assert_true(
+                group,
+                "politica.html",
+                f"meta {key} unico e coerente",
+                values == [expected],
+                f"esperado: {[expected]!r}; encontrado: {values!r}",
+            )
+
+        policy_canonical_links = [attrs.get("href") for attrs in policy.tags("link") if attrs.get("rel") == "canonical"]
+        results.assert_true(
+            group,
+            "politica.html",
+            "canonical proprio e unico",
+            policy_canonical_links == [POLICY_CANONICAL],
+            f"esperado: {[POLICY_CANONICAL]!r}; encontrado: {policy_canonical_links!r}",
+        )
+
+        deferred_providers = (
+            "googletagmanager.com",
+            "google-analytics.com",
+            "connect.facebook.net",
+            "facebook.com/tr",
+            "fbq(",
+            "gtag(",
+        )
+        found_providers = [token for token in deferred_providers if token in policy_head.lower()]
+        results.assert_true(
+            group,
+            "politica.html",
+            "head sem provedores de medicao antecipados",
+            not found_providers,
+            f"tokens encontrados: {found_providers!r}",
         )
 
     social_file = root / SOCIAL_PATH
