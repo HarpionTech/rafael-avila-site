@@ -7,7 +7,11 @@
     "node": "24.x"
   },
   "scripts": {
+    "clean:assets": "node build/site.mjs --clean",
+    "build": "node build/site.mjs --write",
+    "build:check": "node build/site.mjs --check",
     "serve": "python -u -m http.server 8765 --bind 127.0.0.1",
+    "serve:build": "npm run build && npm run serve",
     "setup:browser": "python -u -m playwright install chromium",
     "check:static": "python -u build/check_phase18.py",
     "check:browser": "python -u build/check_phase18.py --browser",
@@ -17,6 +21,8 @@
     "check:phase18": "npm run check:static && npm run check:browser && npm run check:lh && npm run check:performance"
   },
   "devDependencies": {
-    "@lhci/cli": "0.15.1"
+    "@lhci/cli": "0.15.1",
+    "esbuild": "0.28.2",
+    "sharp": "0.35.3"
   }
 }

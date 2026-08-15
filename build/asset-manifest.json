@@ -1,0 +1,317 @@
+{
+  "algorithm": "sha256",
+  "assets": {
+    "assets/bg-1280.webp": {
+      "bytes": 115582,
+      "emitted": "assets/bg-1280.webp",
+      "sha256": "bfa5221035b0",
+      "source": "assets/bg-1280.webp"
+    },
+    "assets/bg-1920.webp": {
+      "bytes": 206808,
+      "emitted": "assets/bg-1920.webp",
+      "sha256": "2b0ab8e1c981",
+      "source": "assets/bg-1920.webp"
+    },
+    "assets/bg-2560.webp": {
+      "bytes": 293314,
+      "emitted": "assets/bg-2560.webp",
+      "sha256": "173023d70d3d",
+      "source": "assets/bg-2560.webp"
+    },
+    "assets/bg-3840.webp": {
+      "bytes": 458390,
+      "emitted": "assets/bg-3840.webp",
+      "sha256": "045681c7af3e",
+      "source": "assets/bg-3840.webp"
+    },
+    "assets/bg-5120.webp": {
+      "bytes": 598564,
+      "emitted": "assets/bg-5120.webp",
+      "sha256": "6e420ad231f2",
+      "source": "assets/bg-5120.webp"
+    },
+    "assets/build/book-3d.min.js": {
+      "bytes": 11593,
+      "emitted": "assets/build/book-3d.min.js",
+      "sha256": "0d17092000db",
+      "source": "assets/js/book-3d.js"
+    },
+    "assets/build/brain-particles.min.js": {
+      "bytes": 9044,
+      "emitted": "assets/build/brain-particles.min.js",
+      "sha256": "7e5abaf23028",
+      "source": "assets/js/brain-particles.js"
+    },
+    "assets/build/config.min.js": {
+      "bytes": 2554,
+      "emitted": "assets/build/config.min.js",
+      "sha256": "d36498816798",
+      "source": "assets/js/config.js"
+    },
+    "assets/build/fonts.min.css": {
+      "bytes": 13844,
+      "emitted": "assets/build/fonts.min.css",
+      "sha256": "eb84cae3069d",
+      "source": "assets/fontes/fontes.css"
+    },
+    "assets/build/main.min.js": {
+      "bytes": 22682,
+      "emitted": "assets/build/main.min.js",
+      "sha256": "81368d8e8444",
+      "source": "assets/js/main.js"
+    },
+    "assets/build/site.min.css": {
+      "bytes": 50874,
+      "emitted": "assets/build/site.min.css",
+      "sha256": "686813001eb9",
+      "source": "assets/css/style.css"
+    },
+    "assets/capa do livro fisico.jpeg": {
+      "bytes": 168289,
+      "emitted": "assets/capa do livro fisico.jpeg",
+      "sha256": "fe2709142ca6",
+      "source": "assets/capa do livro fisico.jpeg"
+    },
+    "assets/depoimento (1).png": {
+      "bytes": 845014,
+      "emitted": "assets/depoimento (1).png",
+      "sha256": "3ffab5e91170",
+      "source": "assets/depoimento (1).png"
+    },
+    "assets/depoimento (2).png": {
+      "bytes": 776282,
+      "emitted": "assets/depoimento (2).png",
+      "sha256": "374f4173f3a7",
+      "source": "assets/depoimento (2).png"
+    },
+    "assets/depoimento (3).png": {
+      "bytes": 865107,
+      "emitted": "assets/depoimento (3).png",
+      "sha256": "11830ab1e457",
+      "source": "assets/depoimento (3).png"
+    },
+    "assets/depoimento (4).png": {
+      "bytes": 766432,
+      "emitted": "assets/depoimento (4).png",
+      "sha256": "e6d0de07f1e8",
+      "source": "assets/depoimento (4).png"
+    },
+    "assets/depoimento (5).png": {
+      "bytes": 1018905,
+      "emitted": "assets/depoimento (5).png",
+      "sha256": "a8137f642878",
+      "source": "assets/depoimento (5).png"
+    },
+    "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxakybaba.woff2": {
+      "bytes": 29512,
+      "emitted": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxakybaba.woff2",
+      "sha256": "9409ee21811f",
+      "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxakybaba.woff2"
+    },
+    "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxdkybaba.woff2": {
+      "bytes": 19500,
+      "emitted": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxdkybaba.woff2",
+      "sha256": "f598dd0700f1",
+      "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxdkybaba.woff2"
+    },
+    "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxekyy.woff2": {
+      "bytes": 45712,
+      "emitted": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxekyy.woff2",
+      "sha256": "e2291e842cf5",
+      "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxekyy.woff2"
+    },
+    "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxqkybaba.woff2": {
+      "bytes": 30964,
+      "emitted": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxqkybaba.woff2",
+      "sha256": "d160e20920ae",
+      "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxqkybaba.woff2"
+    },
+    "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxrkybaba.woff2": {
+      "bytes": 13160,
+      "emitted": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxrkybaba.woff2",
+      "sha256": "73e7f7b1c980",
+      "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxrkybaba.woff2"
+    },
+    "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxtkybaba.woff2": {
+      "bytes": 23568,
+      "emitted": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxtkybaba.woff2",
+      "sha256": "7d0037a17088",
+      "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxtkybaba.woff2"
+    },
+    "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk4397yja.woff2": {
+      "bytes": 132000,
+      "emitted": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk4397yja.woff2",
+      "sha256": "6e4f2958c3a7",
+      "source": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk4397yja.woff2"
+    },
+    "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439dyjjbg.woff2": {
+      "bytes": 86608,
+      "emitted": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439dyjjbg.woff2",
+      "sha256": "45683de03de3",
+      "source": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439dyjjbg.woff2"
+    },
+    "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439hyjjbg.woff2": {
+      "bytes": 27248,
+      "emitted": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439hyjjbg.woff2",
+      "sha256": "6d0543f06b9d",
+      "source": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439hyjjbg.woff2"
+    },
+    "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgihcfpy.woff2": {
+      "bytes": 95540,
+      "emitted": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgihcfpy.woff2",
+      "sha256": "bb24f6648f75",
+      "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgihcfpy.woff2"
+    },
+    "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgyhcfpy.woff2": {
+      "bytes": 27904,
+      "emitted": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgyhcfpy.woff2",
+      "sha256": "0c22099dbcb3",
+      "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgyhcfpy.woff2"
+    },
+    "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2": {
+      "bytes": 146872,
+      "emitted": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2",
+      "sha256": "5dfcd10d24af",
+      "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2"
+    },
+    "assets/frente do livro fisico.jpeg": {
+      "bytes": 141899,
+      "emitted": "assets/frente do livro fisico.jpeg",
+      "sha256": "a83335e4ab19",
+      "source": "assets/frente do livro fisico.jpeg"
+    },
+    "assets/hero-1280.webp": {
+      "bytes": 120254,
+      "emitted": "assets/hero-1280.webp",
+      "sha256": "82cc9bb764f8",
+      "source": "assets/hero-1280.webp"
+    },
+    "assets/hero-1920.webp": {
+      "bytes": 210658,
+      "emitted": "assets/hero-1920.webp",
+      "sha256": "081ac8bfd6d6",
+      "source": "assets/hero-1920.webp"
+    },
+    "assets/hero-2560.webp": {
+      "bytes": 289476,
+      "emitted": "assets/hero-2560.webp",
+      "sha256": "40de2dba9a42",
+      "source": "assets/hero-2560.webp"
+    },
+    "assets/hero-3840.webp": {
+      "bytes": 422766,
+      "emitted": "assets/hero-3840.webp",
+      "sha256": "ff70fbc69944",
+      "source": "assets/hero-3840.webp"
+    },
+    "assets/hero-5120.webp": {
+      "bytes": 532896,
+      "emitted": "assets/hero-5120.webp",
+      "sha256": "e02624c36b07",
+      "source": "assets/hero-5120.webp"
+    },
+    "assets/icones/ancora-editora.webp": {
+      "bytes": 28678,
+      "emitted": "assets/icones/ancora-editora.webp",
+      "sha256": "705f6e9e3559",
+      "source": "assets/icones/ancora-editora.webp"
+    },
+    "assets/livros/3d-mundo-real.webp": {
+      "bytes": 118670,
+      "emitted": "assets/livros/3d-mundo-real.webp",
+      "sha256": "674d72bd8f9b",
+      "source": "assets/livros/3d-mundo-real.webp"
+    },
+    "assets/livros/lombada-mentalidade.webp": {
+      "bytes": 82804,
+      "emitted": "assets/livros/lombada-mentalidade.webp",
+      "sha256": "1b291c1b0fcf",
+      "source": "assets/livros/lombada-mentalidade.webp"
+    },
+    "assets/livros/mock-autoterapia.webp": {
+      "bytes": 151248,
+      "emitted": "assets/livros/mock-autoterapia.webp",
+      "sha256": "3c8fb15bb1ec",
+      "source": "assets/livros/mock-autoterapia.webp"
+    },
+    "assets/livros/mock-mentalidade.webp": {
+      "bytes": 248500,
+      "emitted": "assets/livros/mock-mentalidade.webp",
+      "sha256": "6a6b49e63d73",
+      "source": "assets/livros/mock-mentalidade.webp"
+    },
+    "assets/livros/mock-relacionamentos.webp": {
+      "bytes": 211768,
+      "emitted": "assets/livros/mock-relacionamentos.webp",
+      "sha256": "8383ab556263",
+      "source": "assets/livros/mock-relacionamentos.webp"
+    },
+    "assets/livros/plana-autoconfianca.webp": {
+      "bytes": 386518,
+      "emitted": "assets/livros/plana-autoconfianca.webp",
+      "sha256": "fb727ca9e3d7",
+      "source": "assets/livros/plana-autoconfianca.webp"
+    },
+    "assets/livros/plana-autoterapia.webp": {
+      "bytes": 199022,
+      "emitted": "assets/livros/plana-autoterapia.webp",
+      "sha256": "ca52519c2ddd",
+      "source": "assets/livros/plana-autoterapia.webp"
+    },
+    "assets/livros/plana-mentalidade.webp": {
+      "bytes": 153590,
+      "emitted": "assets/livros/plana-mentalidade.webp",
+      "sha256": "13376af3d4fa",
+      "source": "assets/livros/plana-mentalidade.webp"
+    },
+    "assets/livros/plana-relacionamentos.webp": {
+      "bytes": 131556,
+      "emitted": "assets/livros/plana-relacionamentos.webp",
+      "sha256": "105315876e93",
+      "source": "assets/livros/plana-relacionamentos.webp"
+    },
+    "assets/perfil.png": {
+      "bytes": 2010234,
+      "emitted": "assets/perfil.png",
+      "sha256": "018a89d6a88e",
+      "source": "assets/perfil.png"
+    },
+    "assets/preloader-1280.webp": {
+      "bytes": 24462,
+      "emitted": "assets/preloader-1280.webp",
+      "sha256": "4d6e0ad127dd",
+      "source": "assets/preloader-1280.webp"
+    },
+    "assets/preloader-1920.webp": {
+      "bytes": 46914,
+      "emitted": "assets/preloader-1920.webp",
+      "sha256": "dd53b8d5fd2b",
+      "source": "assets/preloader-1920.webp"
+    },
+    "assets/preloader-2560.webp": {
+      "bytes": 57616,
+      "emitted": "assets/preloader-2560.webp",
+      "sha256": "1ada5ac3bf23",
+      "source": "assets/preloader-2560.webp"
+    },
+    "assets/terapia-online.jpg": {
+      "bytes": 185242,
+      "emitted": "assets/terapia-online.jpg",
+      "sha256": "d731b6976acd",
+      "source": "assets/terapia-online.jpg"
+    },
+    "assets/vendor/ScrollTrigger.min.js": {
+      "bytes": 43380,
+      "emitted": "assets/vendor/ScrollTrigger.min.js",
+      "sha256": "ad33c2df9ada",
+      "source": "assets/vendor/ScrollTrigger.min.js"
+    },
+    "assets/vendor/gsap.min.js": {
+      "bytes": 72214,
+      "emitted": "assets/vendor/gsap.min.js",
+      "sha256": "28033e449a31",
+      "source": "assets/vendor/gsap.min.js"
+    }
+  }
+}
