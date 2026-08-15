@@ -256,6 +256,9 @@
           <h2>Falar</h2>
           <a data-wa href="#">WhatsApp</a>
           <a href="${esc(C.marca.instagram)}" target="_blank" rel="noopener">Instagram · ${esc(C.marca.arroba)}</a>
+          <!-- Unica porta de volta depois que a pessoa ja decidiu: sem ela, a
+               escolha seria definitiva, e a LGPD exige que dê para revogar. -->
+          <button type="button" class="footer-col__botao" onclick="abrePainelCookies()">Preferências de cookies</button>
         </nav>
 
         <p>${esc(data.copyright)}</p>
@@ -998,6 +1001,192 @@
     return api;
   }
 
+  /* Consentimento (LGPD).
+     O banner NÃO carrega nada e não conhece o Pixel: ele só registra a decisão e
+     avisa. Quem mede se inscreve em `Consentimento.ao(...)` e é carregado ali
+     dentro. Essa separação é o que faz o "recusar" valer de verdade — sem ela, o
+     script de medição já estaria na página e o banner seria enfeite. */
+  const CHAVE = 'avila:consentimento';
+
+  const Consentimento = (() => {
+    const inscritos = [];                       // { categoria, fn }
+    const cfg = () => C.consentimento || {};
+    const cats = () => cfg().categorias || [];
+    // Categoria `fixo` nasce ligada e não desliga: é o mínimo para o site operar.
+    const base = () => cats().reduce((o, c) => (o[c.id] = !!c.fixo, o), {});
+
+    const lido = () => {
+      try {
+        const d = JSON.parse(localStorage.getItem(CHAVE) || 'null');
+        // Versão diferente = política mudou, decisão antiga não vale mais.
+        return d && d.versao === cfg().versao ? d.escolhas : null;
+      } catch (e) { return null; }
+    };
+    let escolhas = lido();
+    const permitido = (id) => !!(escolhas && escolhas[id]);
+
+    /* Percorre de trás para frente porque remove da própria lista enquanto anda.
+       Rodar de novo depois de uma mudança de preferência é seguro: quem já
+       disparou saiu da fila. */
+    const dispara = () => {
+      for (let i = inscritos.length - 1; i >= 0; i--) {
+        if (permitido(inscritos[i].categoria)) inscritos.splice(i, 1)[0].fn();
+      }
+    };
+
+    const grava = (novo) => {
+      escolhas = Object.assign(base(), novo);
+      try {
+        localStorage.setItem(CHAVE, JSON.stringify({
+          escolhas, versao: cfg().versao, em: new Date().toISOString()
+        }));
+      } catch (e) { /* navegação privada: vale para esta sessão e pronto */ }
+      dispara();
+    };
+
+    return {
+      decidido: () => !!escolhas,
+      permitido,
+      escolhas: () => Object.assign(base(), escolhas || {}),
+      registra: grava,
+      tudo: () => grava(cats().reduce((o, c) => (o[c.id] = true, o), {})),
+      nada: () => grava({}),
+      /* Executa agora se a categoria já estiver liberada, senão guarda para
+         quando estiver. É o que permite escrever o Pixel sem saber se o
+         visitante é novo — e sem o Pixel conhecer o banner. */
+      ao: (categoria, fn) => {
+        if (permitido(categoria)) fn(); else inscritos.push({ categoria, fn });
+      }
+    };
+  })();
+  window.Consentimento = Consentimento;
+
+  /* Painel de preferências. Aberto pelo banner e também pelo link do rodapé, que
+     é como alguém volta atrás depois de ter decidido — exigência da LGPD: a
+     escolha tem de ser revogável com a mesma facilidade com que foi dada. */
+  /* `aoDecidir` só é chamado quando SAI uma decisão — salvar ou recusar. Fechar
+     no X, no Esc ou no véu não decide nada, e é justamente por isso que o aviso
+     que abriu este painel continua de pé atrás dele: sem decisão, o visitante
+     volta para onde estava em vez de ficar sem nenhuma das duas coisas. */
+  function abrePainelCookies(aoDecidir) {
+    const cfg = C.consentimento;
+    if (!cfg || $('.prefs')) return;
+    const atual = Consentimento.escolhas();
+
+    const painel = document.createElement('div');
+    painel.className = 'prefs';
+    painel.setAttribute('role', 'dialog');
+    painel.setAttribute('aria-modal', 'true');
+    painel.setAttribute('aria-label', cfg.tituloPainel || 'Preferências de cookies');
+    painel.innerHTML = `
+      <div class="prefs__caixa">
+        <button class="prefs__fechar" type="button" aria-label="Fechar">&times;</button>
+        <h2>${esc(cfg.tituloPainel || 'Preferências de cookies')}</h2>
+        <p class="prefs__intro">${esc(cfg.introPainel || '')}${cfg.politica
+          ? ` <a href="${esc(cfg.politica)}" target="_blank" rel="noopener">Política de privacidade</a>` : ''}</p>
+        <ul class="prefs__lista">
+          ${(cfg.categorias || []).map((c) => `
+            <li>
+              <label class="prefs__chave">
+                <input type="checkbox" data-cat="${esc(c.id)}"
+                  ${atual[c.id] ? 'checked' : ''} ${c.fixo ? 'disabled' : ''}>
+                <i aria-hidden="true"></i>
+              </label>
+              <div>
+                <strong>${esc(c.nome)}${c.fixo ? ' <small>sempre ativos</small>' : ''}</strong>
+                <span>${esc(c.desc)}</span>
+              </div>
+            </li>`).join('')}
+        </ul>
+        <div class="prefs__acoes">
+          <button class="liquid-button liquid-button-dark" type="button" data-prefs="nada">${esc(cfg.recusar)}</button>
+          <button class="liquid-button liquid-button-gold" type="button" data-prefs="salvar">${esc(cfg.salvar || 'Salvar')}</button>
+        </div>
+      </div>`;
+
+    const fecha = () => {
+      painel.remove();
+      document.body.classList.remove('menu-open');
+      document.removeEventListener('keydown', tecla);
+    };
+    const tecla = (e) => { if (e.key === 'Escape') fecha(); };
+
+    const decide = (registra) => { registra(); if (aoDecidir) aoDecidir(); fecha(); };
+    $('[data-prefs="salvar"]', painel).addEventListener('click', () => decide(() => {
+      const escolha = {};
+      $$('input[data-cat]', painel).forEach((i) => { escolha[i.dataset.cat] = i.checked; });
+      Consentimento.registra(escolha);
+    }));
+    $('[data-prefs="nada"]', painel).addEventListener('click', () => decide(() => Consentimento.nada()));
+    $('.prefs__fechar', painel).addEventListener('click', fecha);
+    // Clique no véu fecha; dentro da caixa, não.
+    painel.addEventListener('click', (e) => { if (e.target === painel) fecha(); });
+    document.addEventListener('keydown', tecla);
+
+    document.body.appendChild(painel);
+    document.body.classList.add('menu-open');       // trava o scroll do fundo
+    requestAnimationFrame(() => painel.classList.add('is-visivel'));
+    $('.prefs__fechar', painel).focus();
+  }
+  window.abrePainelCookies = abrePainelCookies;
+
+  function setupConsentimento() {
+    const cfg = C.consentimento;
+    if (!cfg || Consentimento.decidido()) return;   // já decidiu: não pergunta de novo
+
+    const caixa = document.createElement('aside');
+    caixa.className = 'consent';
+    caixa.setAttribute('role', 'dialog');
+    caixa.setAttribute('aria-label', 'Aviso de cookies');
+    caixa.innerHTML = `
+      <!-- A mordida sao duas conchas cavadas na borda, nao um arco liso: liso
+           lia como lua minguante. As gotas sao VAZADOS (evenodd), entao o fundo
+           aparece por elas — pintar de cor escura viraria remendo sobre o
+           degrade da caixa. -->
+      <svg class="consent__icone" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill-rule="evenodd" d="M14.7 2.5A9.6 9.6 0 1 0 21.5 11.5 3.05 3.05 0 0 1 17.6 8.1 3.15 3.15 0 0 1 14.7 2.5ZM9.1 9.3a1.55 1.55 0 1 0 0 3.1 1.55 1.55 0 0 0 0-3.1ZM14.8 14.3a1.45 1.45 0 1 0 0 2.9 1.45 1.45 0 0 0 0-2.9ZM8.3 15.7a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5ZM12.6 6.4a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3ZM17.9 13.1a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z"/>
+      </svg>
+      <div class="consent__corpo">
+        ${cfg.titulo ? `<p class="consent__titulo">${esc(cfg.titulo)}</p>` : ''}
+        <p class="consent__texto">${esc(cfg.texto)}${cfg.politica
+          ? ` <a href="${esc(cfg.politica)}" target="_blank" rel="noopener">Política de privacidade</a>` : ''}</p>
+      </div>
+      <!-- Uma acao em destaque na primeira tela; a recusa mora no painel, a um
+           clique de "Personalizar". Decisao do cliente, tomada com a ressalva
+           registrada: e o padrao do mercado brasileiro, e e tambem o desenho que
+           autoridades europeias ja multaram. Para voltar ao par visivel, basta
+           reintroduzir aqui um botao com data-consent="nada". -->
+      <div class="consent__acoes">
+        <button class="consent__link" type="button" data-consent="personalizar">${esc(cfg.personalizar || 'Personalizar')}</button>
+        <button class="liquid-button liquid-button-gold" type="button" data-consent="tudo">${esc(cfg.aceitar)}</button>
+      </div>`;
+
+    const some = () => {
+      caixa.classList.remove('is-visivel');
+      caixa.addEventListener('transitionend', () => caixa.remove(), { once: true });
+      setTimeout(() => caixa.remove(), 600);   // rede de segurança se a transição não correr
+    };
+    $$('[data-consent]', caixa).forEach((b) => b.addEventListener('click', () => {
+      const acao = b.dataset.consent;
+      // O aviso NÃO some aqui: fica atrás do painel e só sai quando houver
+      // decisão. Fechar o painel no X devolve a pessoa ao aviso.
+      if (acao === 'personalizar') { abrePainelCookies(some); return; }
+      Consentimento[acao]();          // `tudo` ou `nada`
+      some();
+    }));
+
+    document.body.appendChild(caixa);
+    /* Espera a cortina sair. Aparecer por cima do preloader seria pedir decisão
+       antes de a pessoa ver o que é a página. */
+    const mostra = () => requestAnimationFrame(() => caixa.classList.add('is-visivel'));
+    if ($('[data-preloader]')) {
+      const espia = new MutationObserver(() => {
+        if (!$('[data-preloader]')) { espia.disconnect(); mostra(); }
+      });
+      espia.observe(document.body, { childList: true });
+    } else mostra();
+  }
+
   function init() {
     if (!C) { console.error('config.js não carregou.'); return; }
     render();
@@ -1013,6 +1202,7 @@
     setupTestimonialLightbox();
     setupLiquidControls();
     setupMotion();
+    setupConsentimento();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

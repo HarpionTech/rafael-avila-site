@@ -21,10 +21,14 @@ window.CONFIG = {
     complemento: 'Criador de métodos e ferramentas voltados ao desenvolvimento pessoal e às relações humanas, Rafael transforma conhecimentos em reflexões práticas, favorecendo mais clareza, consciência e autonomia para que cada pessoa possa fazer escolhas mais alinhadas com a vida que deseja construir.',
     imagem: 'assets/perfil.png',
     imagemAlt: 'Retrato de Rafael Ávila',
+    /* `valor` é a peça grande, `label` a legenda miúda embaixo. O texto do
+       cliente vem numa frase só, então o corte de cada um cai onde a frase tem
+       uma abertura natural — "7 | formações...", "Centenas | de vidas..." — e o
+       ritmo da linha de destaques se mantém. */
     destaques: [
-      { valor: '7', label: 'formações ligadas a comportamento e gestão' },
-      { valor: '16,2 mil', label: 'pessoas acompanham seu conteúdo' },
-      { valor: 'Autor', label: 'publicado pela Âncora Editora' }
+      { valor: '7', label: 'formações na área da Psicologia e comportamento humano' },
+      { valor: 'Centenas', label: 'de vidas transformadas através da terapia' },
+      { valor: 'Autor', label: 'do livro Bem-vindo ao Mundo Real' }
     ]
   },
 
@@ -55,7 +59,7 @@ window.CONFIG = {
 
   publicacoes: {
     eyebrow: 'Publicações',
-    titulo: 'Livros publicados por Rafael Ávila.',
+    titulo: 'Livro e e-books publicados por Rafael Ávila.',
     intro: 'Arraste o livro para girá-lo',
     sck: 'lp|ebooks',
     /* Vantagem do formato digital, compartilhada pelos quatro e-books.
@@ -103,7 +107,7 @@ window.CONFIG = {
             /* Sem prazo em dias: o envio é da editora pela Hotmart, e um número
                aqui vira promessa que a página não controla. Quando o Rafael
                confirmar o prazo real, entra no lugar de `titulo`. */
-            selo: { icone: 'caminhao', titulo: 'Enviado para todo o Brasil', desc: 'Livro impresso · Âncora Editora' } },
+            selo: { icone: 'caminhao', titulo: 'Enviado para todo o Brasil', desc: 'Livro impresso' } },
           { rotulo: 'Digital', link: 'https://hotmart.com/pt-br/marketplace/produtos/hagsxd-bem-vindo-ao-mundo-real-m2oxk/G107096153I',
             selo: { icone: 'raio', titulo: 'Acesso imediato', desc: 'Link na hora da compra' } }
         ],
@@ -234,5 +238,42 @@ window.CONFIG = {
 
   rodape: {
     copyright: `© ${new Date().getFullYear()} Rafael Ávila. Todos os direitos reservados.`
+  },
+
+  /* Consentimento (LGPD).
+     Só existe UMA categoria de dado aqui — medição de anúncio — então o banner
+     tem duas saídas e nenhuma tela de preferências: um painel de categorias com
+     uma categoria só é burocracia, não escolha.
+     `versao` é o que permite voltar a perguntar se a política mudar: a decisão
+     é guardada com ela, e uma versão nova invalida o aceite antigo. */
+  consentimento: {
+    versao: 1,
+    titulo: 'Cookies e privacidade',
+    /* Diz a FINALIDADE, que é o que a LGPD pede, sem virar jargão. A segunda
+       frase não é enfeite: aqui nada de rastreamento carrega antes do aceite, ao
+       contrário do padrão do mercado, e afirmar isso é o que justifica o aviso
+       existir em vez de ser um "ok" decorativo. */
+    texto: 'Usamos cookies para entender como o site é usado e medir o desempenho dos nossos anúncios. Nenhum rastreamento é carregado antes da sua escolha.',
+    aceitar: 'Aceitar todos',
+    recusar: 'Recusar',
+    personalizar: 'Personalizar configurações',
+    tituloPainel: 'Preferências de cookies',
+    introPainel: 'Você escolhe o que fica ligado. Nada além do essencial é carregado sem a sua permissão, e dá para mudar de ideia quando quiser.',
+    salvar: 'Salvar preferências',
+    /* SÓ as categorias que existem de verdade aqui. Site grande costuma listar
+       quatro ou cinco porque roda dezenas de rastreadores; listar categoria vazia
+       para parecer completo é o que transforma o aviso em teatro. Quando entrar
+       uma ferramenta nova, ela entra na categoria dela — ou ganha uma linha. */
+    categorias: [
+      { id: 'essenciais', nome: 'Essenciais', fixo: true,
+        desc: 'Guardam apenas a sua escolha sobre cookies. Sem eles, este aviso reapareceria a cada visita.' },
+      { id: 'estatisticas', nome: 'Estatísticas',
+        desc: 'Medem de forma agregada como as páginas são usadas, para saber o que melhorar.' },
+      { id: 'marketing', nome: 'Marketing',
+        desc: 'Medem o resultado dos anúncios e evitam mostrar o mesmo anúncio repetidas vezes.' }
+    ],
+    // Vazio esconderia o link. O Meta exige a política publicada para aprovar
+    // anúncios, então isto precisa existir antes da primeira campanha.
+    politica: 'politica.html'
   }
 };
