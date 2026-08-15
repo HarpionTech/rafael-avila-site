@@ -1,32 +1,26 @@
-"""Fecha o SEO da pagina assim que o dominio existir.
-
-Tudo que o Google precisa e que depende de URL ABSOLUTA esta aqui: canonical,
-og:url, og:image, sitemap, robots e os dados estruturados. Nada disso funciona
-com caminho relativo — canonical relativo o Google ignora, og:image relativo o
-WhatsApp nao busca, e sitemap so aceita URL completa.
-
-Enquanto o dominio nao existe, o index.html fica VALIDO e sem placeholder
-nenhum: as tags moram entre dois marcadores vazios e sao escritas aqui. Assim
-nada quebrado vai ao ar por engano se a pagina subir antes da hora.
+"""Mantem canonical, social cards, JSON-LD, robots e sitemap sincronizados.
 
 Uso:
-  python build/seo.py https://rafaelavila.com.br
-  python build/seo.py https://rafaelavila.com.br --github-pages
-  python build/seo.py https://rafaelavila.com.br --verificacao=CODIGO
-
---github-pages escreve tambem o CNAME, que o GitHub Pages exige para dominio
-proprio — foi o que faltou no website-salsa e derrubou o dominio ate ser criado.
-
---verificacao insere a <meta> do Google Search Console. So e necessaria no modo
-"prefixo de URL"; verificando por DNS (registro TXT), que e o modo que cobre www
-e nao-www de uma vez, a meta nao entra.
+  python build/seo.py https://rafaelavilaterapeuta.com.br
+  python build/seo.py https://rafaelavilaterapeuta.com.br --github-pages
+  python build/seo.py https://rafaelavilaterapeuta.com.br --verificacao=CODIGO
 """
-import os
+
+from __future__ import annotations
+
+import json
 import re
 import sys
 from datetime import date
+from pathlib import Path
+from urllib.parse import urlparse
 
-RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = Path(__file__).resolve().parent.parent
+CANONICAL_ORIGIN = "https://rafaelavilaterapeuta.com.br"
+SOCIAL_PATH = "assets/social/rafael-avila-1200x630.webp"
+SOCIAL_TITLE = "Você não precisa ser outra pessoa."
+SOCIAL_DESCRIPTION = "Precisa aprender a lidar com quem você é. Terapia online com Rafael Ávila — breve, prática e objetiva."
+SOCIAL_ALT = "Rafael Ávila, terapeuta comportamental, em retrato editorial."
 
 # A politica entra com prioridade baixa: precisa ser encontravel, mas nao deve
 # competir com a home por relevancia.
@@ -41,6 +35,18 @@ WHATSAPP = "https://wa.me/5548991947402"
 
 def log(m):
     print(f"[SEO] {m}")
+
+
+def normalizar_dominio(valor: str) -> str:
+    dominio = valor.rstrip("/")
+    parsed = urlparse(dominio)
+    if parsed.scheme != "https" or not parsed.netloc or parsed.path or parsed.params or parsed.query or parsed.fragment:
+        raise SystemExit("[SEO] use uma origem HTTPS sem caminho, query ou fragmento")
+    return dominio
+
+
+def social_url(dominio: str) -> str:
+    return f"{dominio}/{SOCIAL_PATH}"
 
 
 def robots(dominio):
@@ -79,54 +85,82 @@ def sitemap(dominio):
 
 
 def cabeca(dominio, verificacao=""):
-    """Tags do <head> que dependem do dominio, mais os dados estruturados.
+    """Retorna o unico bloco de head que depende da origem publica."""
 
-    O JSON-LD e o que mais rende para marca pessoal: e por ele que o Google
-    entende que "Rafael Avila" e uma pessoa que presta um servico, liga o perfil
-    do Instagram ao site e passa a aceitar o site como fonte em recomendacao.
-    `sameAs` e a chave dessa ligacao.
-    """
-    dados = f'''{{
-  "@context": "https://schema.org",
-  "@graph": [
-    {{
-      "@type": "Person",
-      "@id": "{dominio}/#rafael",
-      "name": "Rafael \\u00c1vila",
-      "url": "{dominio}/",
-      "image": "{dominio}/assets/perfil.png",
-      "jobTitle": "Terapeuta comportamental",
-      "description": "Terapeuta, mentor, palestrante e autor do livro Bem-vindo ao Mundo Real.",
-      "sameAs": ["{INSTAGRAM}"]
-    }},
-    {{
-      "@type": "ProfessionalService",
-      "@id": "{dominio}/#servico",
-      "name": "Rafael \\u00c1vila \\u2014 Terapia online",
-      "url": "{dominio}/",
-      "image": "{dominio}/assets/perfil.png",
-      "provider": {{ "@id": "{dominio}/#rafael" }},
-      "areaServed": {{ "@type": "Country", "name": "Brasil" }},
-      "availableLanguage": "pt-BR",
-      "serviceType": "Terapia comportamental online",
-      "potentialAction": {{
-        "@type": "CommunicateAction",
-        "target": "{WHATSAPP}"
-      }}
-    }}
-  ]
-}}'''
+    image = social_url(dominio)
+    dados = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Person",
+                "@id": f"{dominio}/#rafael",
+                "name": "Rafael Ávila",
+                "url": f"{dominio}/",
+                "image": image,
+                "jobTitle": "Terapeuta comportamental",
+                "description": "Terapeuta, mentor, palestrante e autor do livro Bem-vindo ao Mundo Real.",
+                "sameAs": [INSTAGRAM],
+            },
+            {
+                "@type": "ProfessionalService",
+                "@id": f"{dominio}/#servico",
+                "name": "Rafael Ávila — Terapia online",
+                "url": f"{dominio}/",
+                "image": image,
+                "provider": {"@id": f"{dominio}/#rafael"},
+                "areaServed": {"@type": "Country", "name": "Brasil"},
+                "availableLanguage": "pt-BR",
+                "serviceType": "Terapia comportamental online",
+                "potentialAction": {
+                    "@type": "CommunicateAction",
+                    "target": WHATSAPP,
+                },
+            },
+        ],
+    }
+    json_ld = json.dumps(dados, ensure_ascii=False, indent=2)
     selo = (f'  <meta name="google-site-verification" content="{verificacao}">\n'
             if verificacao else "")
     return (
         selo
         + f'  <link rel="canonical" href="{dominio}/">\n'
+        '  <meta property="og:type" content="website">\n'
         f'  <meta property="og:url" content="{dominio}/">\n'
+        f'  <meta property="og:title" content="{SOCIAL_TITLE}">\n'
+        f'  <meta property="og:description" content="{SOCIAL_DESCRIPTION}">\n'
+        f'  <meta property="og:image" content="{image}">\n'
+        f'  <meta property="og:image:secure_url" content="{image}">\n'
+        '  <meta property="og:image:type" content="image/webp">\n'
+        '  <meta property="og:image:width" content="1200">\n'
+        '  <meta property="og:image:height" content="630">\n'
+        f'  <meta property="og:image:alt" content="{SOCIAL_ALT}">\n'
+        '  <meta property="og:locale" content="pt_BR">\n'
         '  <meta name="twitter:card" content="summary_large_image">\n'
+        f'  <meta name="twitter:title" content="{SOCIAL_TITLE}">\n'
+        f'  <meta name="twitter:description" content="{SOCIAL_DESCRIPTION}">\n'
+        f'  <meta name="twitter:image" content="{image}">\n'
+        f'  <meta name="twitter:image:alt" content="{SOCIAL_ALT}">\n'
         '  <script type="application/ld+json">\n'
-        + "\n".join("  " + l for l in dados.splitlines())
+        + "\n".join("  " + line for line in json_ld.splitlines())
         + "\n  </script>"
     )
+
+
+def escrever(path: Path, conteudo: str) -> None:
+    with path.open("w", encoding="utf-8", newline="\n") as file:
+        file.write(conteudo)
+
+
+def validar_contrato(dominio: str, html: str, robots_text: str, sitemap_text: str) -> None:
+    image = social_url(dominio)
+    required_html = (f'{dominio}/', image, 'og:image:width', 'twitter:image:alt', '"@graph"')
+    if not all(token in html for token in required_html) or "/assets/perfil.png" in html:
+        raise SystemExit("[SEO] index.html nao preservou o contrato social/canonico")
+    if f"Sitemap: {dominio}/sitemap.xml" not in robots_text:
+        raise SystemExit("[SEO] robots.txt divergiu do dominio canonico")
+    expected_urls = [f"{dominio}{path}" for path, _, _ in PAGINAS]
+    if not all(f"<loc>{url}</loc>" in sitemap_text for url in expected_urls):
+        raise SystemExit("[SEO] sitemap.xml divergiu de PAGINAS ou do dominio canonico")
 
 
 def main():
@@ -136,21 +170,18 @@ def main():
             "[SEO] falta o dominio.\n"
             "      uso: python build/seo.py https://exemplo.com.br [--github-pages]"
         )
-    dominio = args[0].rstrip("/")
-    if not dominio.startswith("https://"):
-        raise SystemExit("[SEO] o dominio precisa comecar com https:// — canonical "
-                         "e sitemap com http viram redirecionamento e o Google reclama.")
+    dominio = normalizar_dominio(args[0])
 
-    with open(os.path.join(RAIZ, "robots.txt"), "w", encoding="utf-8", newline="\n") as f:
-        f.write(robots(dominio))
+    robots_text = robots(dominio)
+    escrever(ROOT / "robots.txt", robots_text)
     log("robots.txt")
 
-    with open(os.path.join(RAIZ, "sitemap.xml"), "w", encoding="utf-8", newline="\n") as f:
-        f.write(sitemap(dominio))
+    sitemap_text = sitemap(dominio)
+    escrever(ROOT / "sitemap.xml", sitemap_text)
     log(f"sitemap.xml ({len(PAGINAS)} url)")
 
-    alvo = os.path.join(RAIZ, "index.html")
-    html = open(alvo, encoding="utf-8").read()
+    alvo = ROOT / "index.html"
+    html = alvo.read_text(encoding="utf-8")
 
     verificacao = ""
     for a in sys.argv[1:]:
@@ -165,18 +196,13 @@ def main():
         raise SystemExit("[SEO] marcadores <!-- seo:inicio --> / <!-- seo:fim --> "
                          "nao encontrados no index.html")
 
-    # og:image precisa ser absoluta: relativa, o WhatsApp e o Facebook nao buscam
-    # e o link compartilhado sai sem imagem.
-    novo = re.sub(r'(<meta property="og:image" content=")[^"]*(")',
-                  rf'\g<1>{dominio}/assets/perfil.png\g<2>', novo, count=1)
-
-    open(alvo, "w", encoding="utf-8").write(novo)
-    log("index.html: canonical, og:url, og:image e JSON-LD")
+    validar_contrato(dominio, novo, robots_text, sitemap_text)
+    escrever(alvo, novo)
+    log("index.html: canonical, Open Graph, Twitter e JSON-LD")
 
     if "--github-pages" in sys.argv:
         host = dominio.split("//", 1)[1]
-        with open(os.path.join(RAIZ, "CNAME"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(host + "\n")
+        escrever(ROOT / "CNAME", host + "\n")
         log(f"CNAME -> {host}")
 
     log("pronto. Depois do deploy: cadastrar o sitemap no Google Search Console.")
