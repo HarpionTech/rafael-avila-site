@@ -652,13 +652,17 @@
   function setupPreloader() {
     const cortina = $('[data-preloader]');
     if (!cortina) return;
+    const canvas = $('[data-hero-livro]');
     const marca = $('.preloader__marca', cortina);
     const luz = $('.preloader__luz', cortina);
     const topo = $('.preloader__metade--topo', cortina);
     const base = $('.preloader__metade--base', cortina);
     const gate = window.PreloaderGate;
 
-    gate?.takeOver(4500);
+    /* A coreografia original pode esperar o livro por ate 7 s e ainda precisa
+       de tempo para a luz cortar a marca e as metades abrirem. O watchdog
+       continua garantindo que uma falha nunca prenda a pagina. */
+    gate?.takeOver(9500);
 
     document.body.classList.add('esta-carregando');
     scrollTo(0, 0);
@@ -685,7 +689,7 @@
 
       if (!window.gsap) {
         cortina.style.opacity = '0';
-        setTimeout(solta, 120);
+        setTimeout(solta, 320);
         return;
       }
 
@@ -715,11 +719,22 @@
         .to(luz, { opacity: 0, duration: .55, ease: 'power2.out' }, .92);
     };
 
-    /* A cortina não espera WebGL nem assets pesados. O pôster já é a imagem
-       final segura; Canvas e Book3D podem assumir depois, quando estiverem
-       prontos, sem controlar a disponibilidade da página. */
-    if (reduzido) sair();
-    else setTimeout(sair, 1000);
+    if (reduzido) {
+      sair();
+      return;
+    }
+
+    /* Restaura o ritmo aprovado: o visitante tem tempo de ler "Bem-vindo",
+       a luz nasce no centro e somente então a cortina abre. O livro pronto
+       evita revelar a hero ainda incompleta; piso e teto mantêm a duração
+       previsível sem risco de travamento. */
+    const piso = new Promise((resolve) => setTimeout(resolve, 2500));
+    const objeto = new Promise((resolve) => {
+      if (!canvas || canvas.classList.contains('is-ready')) { resolve(); return; }
+      canvas.addEventListener('livro:pronto', resolve, { once: true });
+    });
+    const teto = new Promise((resolve) => setTimeout(resolve, 7000));
+    Promise.all([piso, Promise.race([objeto, teto])]).then(sair);
   }
 
   /* Objeto da hero: o livro impresso, no mesmo renderizador da vitrine.
