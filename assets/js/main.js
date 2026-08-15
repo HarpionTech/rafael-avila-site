@@ -12,13 +12,38 @@
     return `https://wa.me/${C.whatsapp.numero}?text=${encodeURIComponent(C.whatsapp.mensagem)}`;
   }
 
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  function trapFocus(container, event) {
+    if (event.key !== 'Tab') return;
+    const items = $$(FOCUSABLE, container).filter((item) => !item.hidden && item.getClientRects().length);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function setupMotionText() {
     const wrap = (element) => {
       if (!element || element.dataset.motionReady === 'true') return;
-      const label = element.textContent.trim();
+      const words = element.textContent.trim().split(/\s+/);
+      const fragment = document.createDocumentFragment();
       element.dataset.motionReady = 'true';
-      element.setAttribute('aria-label', label);
-      element.innerHTML = label.split(/\s+/).map((word) => `<span class="word-mask" aria-hidden="true"><span>${esc(word)}</span></span>`).join(' ');
+      words.forEach((word, index) => {
+        const mask = document.createElement('span');
+        const text = document.createElement('span');
+        mask.className = 'word-mask';
+        text.textContent = word;
+        mask.appendChild(text);
+        fragment.appendChild(mask);
+        if (index < words.length - 1) fragment.appendChild(document.createTextNode(' '));
+      });
+      element.replaceChildren(fragment);
     };
     $$('[data-motion-title]').forEach(wrap);
     $$('#hero-title > span, #hero-title > em').forEach(wrap);
@@ -54,6 +79,11 @@
       }
     });
     $$('a', nav).forEach((link) => link.addEventListener('click', close));
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || toggle.getAttribute('aria-expanded') !== 'true') return;
+      close();
+      toggle.focus();
+    });
     window.addEventListener('resize', () => { if (innerWidth > 860) close(); }, { passive: true });
   }
 
@@ -464,6 +494,7 @@
     box.addEventListener('click', (event) => { if (event.target === box) hide(); });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && !box.hidden) hide();
+      else if (!box.hidden) trapFocus(box, event);
     });
   }
 
@@ -810,6 +841,7 @@
     const cfg = C.consentimento;
     if (!cfg || $('.prefs')) return;
     const atual = Consentimento.escolhas();
+    const lastFocus = document.activeElement;
 
     const painel = document.createElement('div');
     painel.className = 'prefs';
@@ -842,12 +874,19 @@
         </div>
       </div>`;
 
+    let closed = false;
     const fecha = () => {
+      if (closed) return;
+      closed = true;
       painel.remove();
       document.body.classList.remove('menu-open');
       document.removeEventListener('keydown', tecla);
+      if (lastFocus instanceof HTMLElement) lastFocus.focus();
     };
-    const tecla = (e) => { if (e.key === 'Escape') fecha(); };
+    const tecla = (event) => {
+      if (event.key === 'Escape') fecha();
+      else trapFocus(painel, event);
+    };
 
     const decide = (registra) => { registra(); if (aoDecidir) aoDecidir(); fecha(); };
     $('[data-prefs="salvar"]', painel).addEventListener('click', () => decide(() => {
@@ -945,4 +984,3 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
-

@@ -675,7 +675,7 @@ def accessibility_browser_scenarios(root: Path) -> dict[str, list[str]]:
                 if hidden_motion:
                     failures["motion-text"].append(f"{hidden_motion} palavra(s) removida(s) da arvore acessivel")
                 expected_title = "Você não precisa ser outra pessoa. Precisa aprender a lidar com quem você é."
-                actual_title = " ".join((page.locator("#hero-title").inner_text()).split())
+                actual_title = " ".join((page.locator("#hero-title").text_content() or "").split())
                 if actual_title != expected_title:
                     failures["motion-text"].append(f"titulo divergente: {actual_title!r}")
 
