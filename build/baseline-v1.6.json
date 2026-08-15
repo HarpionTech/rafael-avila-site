@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-08-15",
+  "canonicalUrl": "https://rafaelavilaterapeuta.com.br/",
+  "profile": "lighthouse-mobile-published",
+  "observed": {
+    "scores": {
+      "performance": 56,
+      "seo": 100,
+      "bestPractices": 100,
+      "accessibility": 96
+    },
+    "metrics": {
+      "fcpMs": 3300,
+      "lcpMs": 6500,
+      "tbtMs": 580,
+      "cls": 0.002
+    }
+  },
+  "phase19Targets": {
+    "status": "future-non-blocking",
+    "note": "Metas finais da Phase 19; registradas para comparacao, sem bloquear a Phase 18.",
+    "metrics": {
+      "lcpMsMax": 2500,
+      "tbtMsMax": 200,
+      "clsMax": 0.1
+    }
+  }
+}
