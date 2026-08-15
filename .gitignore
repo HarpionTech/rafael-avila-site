@@ -3,6 +3,7 @@
 # Tudo que o build cospe para conferencia visual segue o prefixo _: telas de
 # responsivo, sobreposicoes de --debug do rectify, recortes de icone.
 build/_*
+.lighthouseci/
 __pycache__/
 
 # Fontes 3D cruas do Meshy, 268 MB somadas. Nao entram por dois motivos: a de

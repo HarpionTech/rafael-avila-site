@@ -13,10 +13,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import socket
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -37,6 +39,7 @@ GROUPS = (
     "cache",
     "performance",
 )
+LIGHTHOUSE_TIMEOUT_SECONDS = 180
 
 
 @dataclass(frozen=True)
@@ -356,10 +359,128 @@ def self_test(root: Path) -> int:
         return 0
 
 
+def wait_for_local_server(host: str, port: int, timeout: float = 10.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.25):
+                return True
+        except OSError:
+            time.sleep(0.1)
+    return False
+
+
+def browser_checks(root: Path) -> int:
+    """Smoke test local; inclui preflight acionavel do Chromium do Playwright."""
+
+    install_command = "python -m playwright install chromium"
+    try:
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("[browser] FAIL — Playwright Python nao esta instalado.")
+        print("  execute: python -m pip install -r requirements-dev.txt")
+        print(f"  depois:  {install_command}")
+        return 1
+
+    host, port = "127.0.0.1", 8765
+    server: subprocess.Popen[bytes] | None = None
+    try:
+        already_running = wait_for_local_server(host, port, timeout=0.3)
+        if not already_running:
+            server = subprocess.Popen(
+                [sys.executable, "-m", "http.server", str(port), "--bind", host],
+                cwd=root,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            if not wait_for_local_server(host, port):
+                print("[browser] FAIL — servidor local nao respondeu em 10 s")
+                return 1
+
+        with sync_playwright() as playwright:
+            try:
+                browser = playwright.chromium.launch(headless=True)
+            except PlaywrightError as exc:
+                print("[browser] FAIL — Chromium do Playwright indisponivel.")
+                print(f"  execute: {install_command}")
+                print(f"  detalhe: {str(exc).splitlines()[0]}")
+                return 1
+
+            failures: list[str] = []
+            try:
+                page = browser.new_page(viewport={"width": 390, "height": 844})
+                console_errors: list[str] = []
+                page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+                for route in ("/", "/politica.html"):
+                    response = page.goto(f"http://{host}:{port}{route}", wait_until="load", timeout=20_000)
+                    if response is None or not response.ok:
+                        status = "sem resposta" if response is None else str(response.status)
+                        failures.append(f"{route}: HTTP {status}")
+                    if not page.title().strip():
+                        failures.append(f"{route}: title vazio")
+                failures.extend(f"console: {message}" for message in console_errors)
+            finally:
+                browser.close()
+
+        if failures:
+            print(f"[browser] FAIL — {len(failures)} ocorrencia(s)")
+            for failure in failures:
+                print(f"  [browser] {failure}")
+            return 1
+        print("[browser] PASS — / e /politica.html responderam sem erro de console")
+        return 0
+    finally:
+        if server is not None:
+            server.terminate()
+            try:
+                server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait(timeout=5)
+
+
+def lighthouse_checks(root: Path) -> int:
+    """Executa o LHCI local com teto operacional e encerra sua arvore ao excede-lo."""
+
+    npm = shutil.which("npm")
+    if npm is None:
+        print("[lighthouse] FAIL — npm nao encontrado; instale Node.js 24")
+        return 1
+
+    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
+    process = subprocess.Popen(
+        [npm, "run", "check:lh:core"],
+        cwd=root,
+        creationflags=creationflags,
+    )
+    try:
+        return process.wait(timeout=LIGHTHOUSE_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        print(f"[lighthouse] FAIL — excedeu {LIGHTHOUSE_TIMEOUT_SECONDS} s; encerrando auditoria local")
+        if sys.platform == "win32":
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                capture_output=True,
+                timeout=15,
+                check=False,
+            )
+        else:
+            process.terminate()
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+        return 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Executa os checks locais da Phase 18.")
     parser.add_argument("--group", action="append", choices=(*GROUPS, "all"), default=[], help="grupo repetivel; padrao: all")
     parser.add_argument("--self-test", action="store_true", help="injeta uma regressao temporaria e exige falha acionavel")
+    parser.add_argument("--browser", action="store_true", help="executa smoke test local com Playwright/Chromium")
+    parser.add_argument("--lighthouse", action="store_true", help=f"executa Lighthouse CI com timeout de {LIGHTHOUSE_TIMEOUT_SECONDS} s")
     return parser
 
 
@@ -367,6 +488,10 @@ def main() -> int:
     args = build_parser().parse_args()
     if args.self_test:
         return self_test(ROOT)
+    if args.browser:
+        return browser_checks(ROOT)
+    if args.lighthouse:
+        return lighthouse_checks(ROOT)
     _, code = run_groups(ROOT, selected_groups(args.group))
     return code
 

@@ -1,0 +1,21 @@
+{
+  "name": "rafael-avila-site",
+  "version": "1.6.0",
+  "private": true,
+  "description": "Pagina institucional estatica de Rafael Avila",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "serve": "python -m http.server 8765 --bind 127.0.0.1",
+    "setup:browser": "python -m playwright install chromium",
+    "check:static": "python build/check_phase18.py",
+    "check:browser": "python build/check_phase18.py --browser",
+    "check:lh": "python build/check_phase18.py --lighthouse",
+    "check:lh:core": "lhci autorun --config=./lighthouserc.json",
+    "check:phase18": "npm run check:static && npm run check:browser && npm run check:lh"
+  },
+  "devDependencies": {
+    "@lhci/cli": "0.15.1"
+  }
+}
