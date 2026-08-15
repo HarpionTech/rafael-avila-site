@@ -51,7 +51,7 @@
           <span><b>${esc(f.selo.titulo)}</b><i>${esc(f.selo.desc)}</i></span>
         </p>` : ''}
         ${f.link
-          ? `<a class="liquid-button liquid-button-bronze" href="${esc(hotmartLink(f.link))}" target="_blank" rel="noopener">${esc(f.rotulo)} <span aria-hidden="true">↗</span></a>`
+          ? `<a class="liquid-button liquid-button-bronze" href="${esc(hotmartLink(f.link))}" target="_blank" rel="noopener">${esc(f.rotulo)}</a>`
           : `<button class="liquid-button liquid-button-light is-disabled" type="button" disabled>${esc(f.rotulo)} · em breve</button>`}
       </div>`;
     return `<div class="book-offer${lista.length > 1 ? ' book-offer--duplo' : ''}">${lista.map(coluna).join('')}</div>`;
@@ -123,7 +123,7 @@
         ${data.convite ? `
           <div class="method-invite">
             <p>${esc(data.convite)}</p>
-            <a class="liquid-button liquid-button-gold" data-wa href="#">Começar agora <span aria-hidden="true">↗</span></a>
+            <a class="liquid-button liquid-button-gold" data-wa href="#">Começar agora</a>
           </div>` : ''}
       </div>`,
 
@@ -205,7 +205,7 @@
           ${data.itens.map((item) => `
             <a class="testimonial-card" href="${esc(item.imagem)}" target="_blank" rel="noopener" aria-label="Abrir ${esc(item.alt)} em tamanho integral">
               <span class="testimonial-shot"><img src="${esc(item.imagem)}" alt="${esc(item.alt)}" width="640" height="1138" loading="lazy" decoding="async"></span>
-              <span class="testimonial-foot"><strong>${esc(item.nome)}</strong><em aria-hidden="true">↗</em></span>
+              <span class="testimonial-foot"><strong>${esc(item.nome)}</strong></span>
             </a>`).join('')}
         </div>
       </div>`,
@@ -221,11 +221,11 @@
         <div class="contact-channels">
           <a class="contact-channel glass-panel" data-wa href="#">
             <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3.2A12.8 12.8 0 0 0 5.1 22.7L3.6 28.4l5.9-1.5A12.8 12.8 0 1 0 16 3.2Zm0 23.3a10.5 10.5 0 0 1-5.3-1.5l-.4-.2-3.5.9.9-3.4-.2-.4A10.5 10.5 0 1 1 16 26.5Zm5.8-7.8c-.3-.2-1.9-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1a8.6 8.6 0 0 1-4.3-3.7c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.6l-1-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.4-1.2 1.2-1.2 2.8s1.2 3.3 1.4 3.5c.2.2 2.4 3.7 5.9 5.1 2.2.9 3 1 4.1.8.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.2-.6-.4Z"/></svg></span>
-            <span><small>WhatsApp</small><strong>Marcar uma consulta</strong></span><i aria-hidden="true">↗</i>
+            <span><small>WhatsApp</small><strong>Marcar uma consulta</strong></span>
           </a>
           <a class="contact-channel glass-panel" href="${esc(C.marca.instagram)}" target="_blank" rel="noopener">
             <span class="contact-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.7" r="1"/></svg></span>
-            <span><small>Instagram</small><strong>${esc(C.marca.arroba)}</strong></span><i aria-hidden="true">↗</i>
+            <span><small>Instagram</small><strong>${esc(C.marca.arroba)}</strong></span>
           </a>
         </div>
       </div>`,
@@ -239,7 +239,7 @@
         <div class="footer-marca">
           <strong>${esc(C.marca.nome)}</strong>
           <span>${esc(C.marca.titulo)}</span>
-          <a class="liquid-button liquid-button-gold" data-wa href="#">Agendar terapia <span aria-hidden="true">↗</span></a>
+          <a class="liquid-button liquid-button-gold" data-wa href="#">Agendar terapia</a>
         </div>
 
         <nav class="footer-col" aria-label="Seções">

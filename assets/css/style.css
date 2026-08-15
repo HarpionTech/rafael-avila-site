@@ -524,7 +524,6 @@ body.esta-carregando { overflow: hidden; }
 .testimonial-shot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 .testimonial-foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .65rem .8rem; border-top: 1px solid rgba(226,200,143,.12); }
 .testimonial-foot strong { font-family: var(--serif); font-size: .9rem; font-weight: 500; }
-.testimonial-foot em { color: var(--bronze); font-size: .8rem; font-style: normal; }
 @media (max-width: 640px) { .testimonial-grid { grid-template-columns: repeat(2, 1fr); } }
 /* No telefone a lista deita e vira trilho.
    Duas colunas não servem: o print É o depoimento, e com ~180px ele deixa de ser
@@ -565,14 +564,13 @@ body.esta-carregando { overflow: hidden; }
 .contact-copy h2 { max-width: 800px; color: var(--white); }
 .contact-copy > p:last-child { max-width: 680px; margin: 1.5rem 0 0; color: #a8a196; }
 .contact-channels { display: grid; gap: .8rem; }
-.contact-channel { display: grid; grid-template-columns: 48px 1fr auto; gap: 1rem; align-items: center; min-height: 88px; padding: 1rem; border-radius: 1.25rem; color: var(--white); }
+.contact-channel { display: grid; grid-template-columns: 48px 1fr; gap: 1rem; align-items: center; min-height: 88px; padding: 1rem; border-radius: 1.25rem; color: var(--white); }
 .contact-icon { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; background: rgba(255,255,255,.06); }
 .contact-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; }
 .contact-channel:first-child .contact-icon svg { fill: var(--whatsapp); stroke: none; }
 .contact-channel small, .contact-channel strong { display: block; }
 .contact-channel small { color: var(--bronze-light); font-size: .57rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .contact-channel strong { margin-top: .25rem; font-family: var(--serif); font-size: 1.25rem; font-weight: 500; }
-.contact-channel > i { color: var(--bronze-light); font-style: normal; }
 
 /* Footer */
 /* O rodapé é o fim da cena, não mais um cartão sobre ela — então o vidro aqui
@@ -783,7 +781,7 @@ body.esta-carregando { overflow: hidden; }
   .showcase__card > .liquid-button { width: 100%; }
 
     .contact-channels { margin-top: 1rem; }
-  .contact-channel { grid-template-columns: 44px 1fr auto; min-height: 82px; padding: .8rem; }
+  .contact-channel { grid-template-columns: 44px 1fr; min-height: 82px; padding: .8rem; }
   .contact-icon { width: 44px; height: 44px; }
   .contact-channel strong { font-size: 1.05rem; }
 
