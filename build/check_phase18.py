@@ -306,8 +306,15 @@ def check_resilience(root: Path, results: Results) -> None:
     index_path = root / "index.html"
     try:
         html = index_path.read_text(encoding="utf-8")
-        results.assert_true(group, "index.html", "fallback sem JS libera a cortina", ".preloader { display: none !important; }" in html, "regra noscript da cortina ausente")
-        results.assert_true(group, "index.html", "fallback sem JS oferece contato real", "<noscript>" in html and "https://wa.me/" in html, "WhatsApp nao encontrado no fallback")
+        results.assert_true(
+            group,
+            "index.html",
+            "fallback sem JS libera a cortina",
+            ".preloader { display: none" in (root / "assets/css/style.css").read_text(encoding="utf-8")
+            and "preloader-capable" in html,
+            "cortina deve ser oculta por padrao e ativada apenas pelo bootstrap",
+        )
+        results.assert_true(group, "index.html", "fallback sem JS oferece contato real", "https://wa.me/" in html, "WhatsApp nao encontrado no HTML bruto")
     except OSError as exc:
         results.assert_true(group, "index.html", "arquivo legivel", False, str(exc))
 
@@ -546,7 +553,14 @@ def resilience_browser_scenarios(root: Path) -> dict[str, list[str]]:
                             failures[name].append("CTA principal sem href real")
 
                         visible_posters = page.locator(".hero-obj__poster, .showcase__poster").evaluate_all(
-                            "els => els.every(el => { const s = getComputedStyle(el); return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0; })"
+                            """els => els.every(el => {
+                              const visible = node => {
+                                const s = getComputedStyle(node);
+                                return s.display !== 'none' && s.visibility !== 'hidden' && Number(s.opacity) > 0;
+                              };
+                              const canvas = el.previousElementSibling;
+                              return visible(el) || (canvas?.classList.contains('is-ready') && visible(canvas));
+                            })"""
                         )
                         if not visible_posters:
                             failures[name].append("poster de fallback invisivel")

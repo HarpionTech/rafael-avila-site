@@ -409,6 +409,7 @@
        (#ebooks), o ScrollTrigger pode disparar junto com o observer, e sem esta
        chamada o livro da frente não existiria ainda para se apresentar. */
     entradaVitrine = () => { montaLivros(); if (books[index]) books[index].entrada(); };
+    root.classList.add('is-enhanced');
   }
 
   /* Lightbox dos depoimentos. O card continua sendo um <a> para a imagem: sem JS
@@ -620,11 +621,13 @@
   function setupPreloader() {
     const cortina = $('[data-preloader]');
     if (!cortina) return;
-    const canvas = $('[data-hero-livro]');
     const marca = $('.preloader__marca', cortina);
     const luz = $('.preloader__luz', cortina);
     const topo = $('.preloader__metade--topo', cortina);
     const base = $('.preloader__metade--base', cortina);
+    const gate = window.PreloaderGate;
+
+    gate?.takeOver(4500);
 
     document.body.classList.add('esta-carregando');
     scrollTo(0, 0);
@@ -633,7 +636,8 @@
 
     const solta = () => {
       document.body.classList.remove('esta-carregando');
-      cortina.remove();
+      if (gate) gate.release();
+      else cortina.remove();
       // Só agora o livro começa a girar: até aqui ele espera de capa para a frente.
       if (girarHeroLivro) girarHeroLivro();
     };
@@ -643,9 +647,14 @@
       if (saiu) return;
       saiu = true;
 
-      if (!window.gsap || reduzido) {
+      if (reduzido) {
+        solta();
+        return;
+      }
+
+      if (!window.gsap) {
         cortina.style.opacity = '0';
-        setTimeout(solta, 320);
+        setTimeout(solta, 120);
         return;
       }
 
@@ -675,21 +684,11 @@
         .to(luz, { opacity: 0, duration: .55, ease: 'power2.out' }, .92);
     };
 
-    /* Quem manda e o objeto da hero, o asset mais pesado; o teto evita a pagina
-       presa se algo falhar.
-       O piso e 2,5s: tempo de ler "Bem-vindo" e ver a luz nascer, sem que a
-       espera vire pedagio. Somando a coreografia de saida, sao ~4s ate a hero
-       inteira - que e onde os 4s de piso anteriores ja estavam colocando so a
-       cortina. Vale lembrar que ele e PISO, nao espera fixa: numa visita com
-       tudo em cache o livro fica pronto em milissegundos e o piso e quem manda;
-       numa conexao ruim quem manda e o livro. */
-    const piso = new Promise((r) => setTimeout(r, 2500));
-    const objeto = new Promise((r) => {
-      if (!canvas || canvas.classList.contains('is-ready')) { r(); return; }
-      canvas.addEventListener('livro:pronto', r, { once: true });
-    });
-    const teto = new Promise((r) => setTimeout(r, 7000));
-    Promise.all([piso, Promise.race([objeto, teto])]).then(sair);
+    /* A cortina não espera WebGL nem assets pesados. O pôster já é a imagem
+       final segura; Canvas e Book3D podem assumir depois, quando estiverem
+       prontos, sem controlar a disponibilidade da página. */
+    if (reduzido) sair();
+    else setTimeout(sair, 1000);
   }
 
   /* Objeto da hero: o livro impresso, no mesmo renderizador da vitrine.
@@ -928,7 +927,6 @@
 
   function init() {
     if (!C) { console.error('config.js não carregou.'); return; }
-    render();
     setupMotionText();
     applyLinks();
     setupMenu();
@@ -947,5 +945,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
-
 

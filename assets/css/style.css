@@ -99,7 +99,8 @@ button, a { touch-action: manipulation; }
    apareceria no fim, quando a cortina é removida — era o flash preto entre a
    abertura e o site. Quem cobre a tela são as metades, e o que a fresta mostra
    é o que está atrás de tudo: a página. */
-.preloader { position: fixed; z-index: 300; inset: 0; overflow: hidden; background: transparent; }
+.preloader { display: none; position: fixed; z-index: 300; inset: 0; overflow: hidden; background: transparent; pointer-events: none; }
+.preloader-capable .preloader { display: block; pointer-events: auto; }
 
 /* Duas metades da MESMA foto, encostadas na linha do meio.
    Cada uma recorta metade da tela mas carrega a imagem em altura de viewport
@@ -859,8 +860,9 @@ body.esta-carregando { overflow: hidden; }
 /* `overflow: hidden` para a fita de lançamento ser cortada pela quina
    arredondada do painel em vez de escapar por cima dela. */
 .showcase__panel { position: relative; z-index: 6; padding: clamp(1.5rem, 3vw, 2.2rem); border-radius: 1.2rem; overflow: hidden; }
-.showcase__card { display: none; }
-.showcase__card.is-active { display: block; }
+.showcase__card { display: block; }
+.showcase.is-enhanced .showcase__card { display: none; }
+.showcase.is-enhanced .showcase__card.is-active { display: block; }
 /* Fita diagonal no canto do painel.
    Mora dentro do CARD, mas se mede contra o PAINEL — que é o ancestral
    posicionado mais próximo. Isso resolve dois problemas de uma vez: a fita
@@ -1062,6 +1064,37 @@ body.esta-carregando { overflow: hidden; }
 .showcase__item:not(.is-front) .showcase__canvas { pointer-events: none; }
 .showcase__canvas.is-ready + .showcase__poster { opacity: 0; }
 .showcase__poster { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: contain; transition: opacity .5s ease; }
+
+/* Sem a capability do controller, a vitrine é uma lista legível: capas e cards
+   ficam em fluxo e nenhum controle inerte é anunciado. */
+.showcase:not(.is-enhanced) { display: block; }
+.showcase:not(.is-enhanced) .showcase__stage { height: auto; perspective: none; }
+.showcase:not(.is-enhanced) .showcase__ring {
+  position: static;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.25rem;
+  transform: none;
+}
+.showcase:not(.is-enhanced) .showcase__item {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  transform: none;
+  opacity: 1 !important;
+  filter: none;
+}
+.showcase:not(.is-enhanced) .showcase__canvas { display: none; }
+.showcase:not(.is-enhanced) .showcase__poster { position: static; }
+.showcase:not(.is-enhanced) .showcase__panel { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.showcase__arrow,
+.showcase__pager,
+.showcase__nav { display: none; }
+.showcase.is-enhanced .showcase__arrow { display: grid; }
+.showcase.is-enhanced .showcase__pager,
+.showcase.is-enhanced .showcase__nav { display: flex; }
 
 /* Sombra de contato. Não pode ser box-shadow no canvas: a sombra sairia
    retangular em volta de uma tela transparente, e o livro é uma silhueta. */

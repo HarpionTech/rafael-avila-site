@@ -69,8 +69,30 @@
   <link rel="stylesheet" href="assets/css/style.css?v=20260817400000">
 </head>
 <body>
-  <!-- Sem JS a cortina nunca subiria e a página ficaria trancada atrás dela. -->
-  <noscript><style>.preloader { display: none !important; }</style></noscript>
+  <!-- A cortina é opt-in: sem JavaScript o estado base já é a página final. O
+       watchdog é independente de main.js e sempre libera a viewport. -->
+  <script>
+    (() => {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const root = document.documentElement;
+      let timer;
+      const release = () => {
+        clearTimeout(timer);
+        root.classList.remove('preloader-capable');
+        document.body?.classList.remove('esta-carregando');
+        document.querySelector('[data-preloader]')?.remove();
+      };
+      root.classList.add('preloader-capable');
+      timer = setTimeout(release, 2500);
+      window.PreloaderGate = {
+        release,
+        takeOver(timeout = 4500) {
+          clearTimeout(timer);
+          timer = setTimeout(release, timeout);
+        }
+      };
+    })();
+  </script>
 
   <!-- A cortina é DUAS metades da mesma sala, encostadas na linha do meio. É o
        que permite a luz abrir a fresta ali e as metades se afastarem a partir
