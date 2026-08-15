@@ -300,6 +300,37 @@ def check_accessibility(root: Path, results: Results) -> None:
         results.assert_true(group, filename, "idioma pt-BR", len(html_tags) == 1 and html_tags[0].get("lang") == "pt-BR", "atributo lang ausente ou divergente")
         results.assert_true(group, filename, "exatamente um h1", len(parser.tags("h1")) == 1, f"encontrados {len(parser.tags('h1'))}")
 
+        prohibited = [
+            (tag, attrs.get("aria-label"))
+            for tag, attrs in parser.start_tags
+            if tag in {"span", "em"} and attrs.get("aria-label")
+        ]
+        results.assert_true(
+            group,
+            filename,
+            "sem aria-label em wrappers genericos",
+            not prohibited,
+            f"encontrado: {prohibited!r}",
+        )
+
+    css = (root / "assets/css/style.css").read_text(encoding="utf-8")
+    results.assert_true(
+        group,
+        "assets/css/style.css",
+        "foco perceptivel global",
+        ":focus-visible" in css and "outline:" in css,
+        "regra global de foco visivel ausente",
+    )
+
+    for scenario, failures in accessibility_browser_scenarios(root).items():
+        results.assert_true(
+            group,
+            f"browser:{scenario}",
+            "operacao acessivel",
+            not failures,
+            "; ".join(failures),
+        )
+
 
 def check_resilience(root: Path, results: Results) -> None:
     group = "resilience"
@@ -584,6 +615,125 @@ def resilience_browser_scenarios(root: Path) -> dict[str, list[str]]:
                         context.close()
             finally:
                 browser.close()
+    finally:
+        if server is not None:
+            server.terminate()
+            try:
+                server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait(timeout=5)
+
+    return failures
+
+
+def accessibility_browser_scenarios(root: Path) -> dict[str, list[str]]:
+    """Valida nomes, teclado, dialogs e reduced motion no Chromium local."""
+
+    failures: dict[str, list[str]] = {"motion-text": [], "keyboard-dialogs": [], "reduced-motion": []}
+    try:
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return {"preflight": ["Playwright ausente; execute pip install -r requirements-dev.txt"]}
+
+    host, port = "127.0.0.1", 8765
+    server: subprocess.Popen[bytes] | None = None
+    try:
+        if not wait_for_local_server(host, port, timeout=0.3):
+            server = subprocess.Popen(
+                [sys.executable, "-m", "http.server", str(port), "--bind", host],
+                cwd=root,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+            if not wait_for_local_server(host, port):
+                return {"preflight": ["servidor local nao respondeu em 10 s"]}
+
+        with sync_playwright() as playwright:
+            try:
+                browser = playwright.chromium.launch(headless=True)
+            except PlaywrightError:
+                return {"preflight": ["Chromium do Playwright indisponivel"]}
+
+            try:
+                context = browser.new_context(viewport={"width": 390, "height": 844})
+                context.add_init_script("""
+                  localStorage.setItem('avila:consentimento', JSON.stringify({
+                    versao: 1,
+                    escolhas: { essenciais: true, estatisticas: false, marketing: false }
+                  }));
+                """)
+                page = context.new_page()
+                page.goto(f"http://{host}:{port}/", wait_until="load", timeout=20_000)
+                page.locator("[data-preloader]").wait_for(state="hidden", timeout=4_000)
+
+                generic_labels = page.locator("span[aria-label], em[aria-label]").count()
+                hidden_motion = page.locator("[data-motion-title] [aria-hidden='true'], #hero-title > span [aria-hidden='true'], #hero-title > em [aria-hidden='true']").count()
+                if generic_labels:
+                    failures["motion-text"].append(f"{generic_labels} wrapper(s) generico(s) com aria-label")
+                if hidden_motion:
+                    failures["motion-text"].append(f"{hidden_motion} palavra(s) removida(s) da arvore acessivel")
+                expected_title = "Você não precisa ser outra pessoa. Precisa aprender a lidar com quem você é."
+                actual_title = " ".join((page.locator("#hero-title").inner_text()).split())
+                if actual_title != expected_title:
+                    failures["motion-text"].append(f"titulo divergente: {actual_title!r}")
+
+                toggle = page.locator(".nav-toggle")
+                toggle.focus()
+                page.keyboard.press("Enter")
+                if toggle.get_attribute("aria-expanded") != "true":
+                    failures["keyboard-dialogs"].append("menu nao abre por teclado")
+                page.keyboard.press("Escape")
+                if toggle.get_attribute("aria-expanded") != "false" or page.evaluate("document.activeElement === document.querySelector('.nav-toggle')") is not True:
+                    failures["keyboard-dialogs"].append("Escape nao fecha menu e devolve foco")
+
+                testimonial = page.locator(".testimonial-card").first
+                testimonial.focus()
+                page.keyboard.press("Enter")
+                page.locator(".lightbox.is-open").wait_for(state="visible", timeout=2_000)
+                page.locator(".lightbox__close").focus()
+                page.keyboard.press("Shift+Tab")
+                if not page.evaluate("document.querySelector('.lightbox').contains(document.activeElement)"):
+                    failures["keyboard-dialogs"].append("lightbox nao contem o foco")
+                page.keyboard.press("Escape")
+                if not page.evaluate("document.activeElement === document.querySelector('.testimonial-card')"):
+                    failures["keyboard-dialogs"].append("lightbox nao devolve foco ao acionador")
+
+                prefs_trigger = page.locator(".footer-col__botao")
+                prefs_trigger.focus()
+                page.keyboard.press("Enter")
+                page.locator(".prefs.is-visivel").wait_for(state="visible", timeout=2_000)
+                page.locator(".prefs__fechar").focus()
+                page.keyboard.press("Shift+Tab")
+                if not page.evaluate("document.querySelector('.prefs').contains(document.activeElement)"):
+                    failures["keyboard-dialogs"].append("preferencias nao contem o foco")
+                page.keyboard.press("Escape")
+                if page.locator(".prefs").count() or not page.evaluate("document.activeElement === document.querySelector('.footer-col__botao')"):
+                    failures["keyboard-dialogs"].append("preferencias nao fecha e devolve foco")
+                context.close()
+
+                reduced = browser.new_context(
+                    viewport={"width": 390, "height": 844},
+                    reduced_motion="reduce",
+                )
+                reduced.add_init_script("""
+                  localStorage.setItem('avila:consentimento', JSON.stringify({
+                    versao: 1,
+                    escolhas: { essenciais: true, estatisticas: false, marketing: false }
+                  }));
+                """)
+                page = reduced.new_page()
+                page.goto(f"http://{host}:{port}/", wait_until="load", timeout=20_000)
+                page.locator("[data-preloader]").wait_for(state="hidden", timeout=1_000)
+                for selector in ("#hero-title", ".hero-actions [data-wa]", "#metodo h2", "#ebooks h2"):
+                    if not page.locator(selector).first.is_visible():
+                        failures["reduced-motion"].append(f"estado final invisivel: {selector}")
+                reduced.close()
+            finally:
+                browser.close()
+    except PlaywrightError as exc:
+        failures.setdefault("preflight", []).append(str(exc).splitlines()[0])
     finally:
         if server is not None:
             server.terminate()
