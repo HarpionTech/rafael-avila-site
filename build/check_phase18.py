@@ -38,9 +38,10 @@ if hasattr(sys.stderr, "reconfigure"):
 
 ROOT = Path(__file__).resolve().parent.parent
 BASELINE = Path("build/baseline-v1.6.json")
-CANONICAL = "https://rafaelavilaterapeuta.com.br/"
-CANONICAL_ORIGIN = CANONICAL.rstrip("/")
-POLICY_CANONICAL = f"{CANONICAL}politica.html"
+CANONICAL_ORIGIN = "https://rafaelavilaterapeuta.com.br"
+CANONICAL = f"{CANONICAL_ORIGIN}/terapia"
+POLICY_CANONICAL = f"{CANONICAL_ORIGIN}/politica.html"
+BASELINE_CANONICAL = f"{CANONICAL_ORIGIN}/"
 SOCIAL_PATH = Path("assets/social/rafael-avila-1200x630.webp")
 SOCIAL_URL = f"{CANONICAL_ORIGIN}/{SOCIAL_PATH.as_posix()}"
 GROUPS = (
@@ -448,7 +449,7 @@ def check_seo(root: Path, results: Results) -> None:
     robots_path = root / "robots.txt"
     try:
         robots = robots_path.read_text(encoding="utf-8")
-        expected = f"Sitemap: {CANONICAL}sitemap.xml"
+        expected = f"Sitemap: {CANONICAL_ORIGIN}/sitemap.xml"
         results.assert_true(group, "robots.txt", "sitemap canonico", expected in robots, f"esperado {expected}")
     except OSError as exc:
         results.assert_true(group, "robots.txt", "arquivo legivel", False, str(exc))
@@ -459,8 +460,8 @@ def check_seo(root: Path, results: Results) -> None:
         namespace = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
         urls = [node.text for node in xml_root.findall("s:url/s:loc", namespace)]
         results.assert_true(group, "sitemap.xml", "XML parseavel com home canonica", CANONICAL in urls, f"URLs: {urls!r}")
-        results.assert_true(group, "sitemap.xml", "somente URLs HTTPS do apex", bool(urls) and all(url.startswith(CANONICAL) for url in urls), f"URLs: {urls!r}")
-        results.assert_true(group, "sitemap.xml", "paginas canonicas exatas", urls == [CANONICAL, f"{CANONICAL}politica.html"], f"URLs: {urls!r}")
+        results.assert_true(group, "sitemap.xml", "somente URLs HTTPS do apex", bool(urls) and all(url.startswith(f"{CANONICAL_ORIGIN}/") for url in urls), f"URLs: {urls!r}")
+        results.assert_true(group, "sitemap.xml", "paginas canonicas exatas", urls == [CANONICAL, POLICY_CANONICAL], f"URLs: {urls!r}")
     except (OSError, ET.ParseError) as exc:
         results.assert_true(group, "sitemap.xml", "XML parseavel", False, str(exc))
 
@@ -806,7 +807,7 @@ def check_performance(root: Path, results: Results) -> None:
 
     expected = {
         ("schemaVersion",): 1,
-        ("canonicalUrl",): CANONICAL,
+        ("canonicalUrl",): BASELINE_CANONICAL,
         ("observed", "scores", "performance"): 56,
         ("observed", "scores", "seo"): 100,
         ("observed", "scores", "bestPractices"): 100,
@@ -1369,11 +1370,11 @@ def local_seo_http_checks(root: Path) -> list[str]:
                 if token not in html:
                     failures.append(f"/: metadado ausente: {token}")
         if robots := responses.get("/robots.txt"):
-            if f"Sitemap: {CANONICAL}sitemap.xml" not in robots[1].decode("utf-8", errors="replace"):
+            if f"Sitemap: {CANONICAL_ORIGIN}/sitemap.xml" not in robots[1].decode("utf-8", errors="replace"):
                 failures.append("/robots.txt: sitemap canonico ausente")
         if sitemap_response := responses.get("/sitemap.xml"):
             sitemap_text = sitemap_response[1].decode("utf-8", errors="replace")
-            if f"<loc>{CANONICAL}</loc>" not in sitemap_text or f"<loc>{CANONICAL}politica.html</loc>" not in sitemap_text:
+            if f"<loc>{CANONICAL}</loc>" not in sitemap_text or f"<loc>{POLICY_CANONICAL}</loc>" not in sitemap_text:
                 failures.append("/sitemap.xml: paginas canonicas divergentes")
         if social := responses.get(f"/{SOCIAL_PATH.as_posix()}"):
             try:

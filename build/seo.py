@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 CANONICAL_ORIGIN = "https://rafaelavilaterapeuta.com.br"
+LANDING_PATH = "/terapia"
 SOCIAL_PATH = "assets/social/rafael-avila-1200x630.webp"
 SOCIAL_TITLE = "Você não precisa ser outra pessoa."
 SOCIAL_DESCRIPTION = "Precisa aprender a lidar com quem você é. Terapia online com Rafael Ávila — breve, prática e objetiva."
@@ -25,7 +26,7 @@ SOCIAL_ALT = "Rafael Ávila, terapeuta comportamental, em retrato editorial."
 # A politica entra com prioridade baixa: precisa ser encontravel, mas nao deve
 # competir com a home por relevancia.
 PAGINAS = [
-    ("/", "1.0", "monthly"),
+    (LANDING_PATH, "1.0", "monthly"),
     ("/politica.html", "0.3", "yearly"),
 ]
 
@@ -47,6 +48,10 @@ def normalizar_dominio(valor: str) -> str:
 
 def social_url(dominio: str) -> str:
     return f"{dominio}/{SOCIAL_PATH}"
+
+
+def landing_url(dominio: str) -> str:
+    return f"{dominio}{LANDING_PATH}"
 
 
 def robots(dominio):
@@ -88,14 +93,15 @@ def cabeca(dominio, verificacao=""):
     """Retorna o unico bloco de head que depende da origem publica."""
 
     image = social_url(dominio)
+    pagina = landing_url(dominio)
     dados = {
         "@context": "https://schema.org",
         "@graph": [
             {
                 "@type": "Person",
-                "@id": f"{dominio}/#rafael",
+                "@id": f"{pagina}#rafael",
                 "name": "Rafael Ávila",
-                "url": f"{dominio}/",
+                "url": pagina,
                 "image": image,
                 "jobTitle": "Terapeuta comportamental",
                 "description": "Terapeuta, mentor, palestrante e autor do livro Bem-vindo ao Mundo Real.",
@@ -103,11 +109,11 @@ def cabeca(dominio, verificacao=""):
             },
             {
                 "@type": "ProfessionalService",
-                "@id": f"{dominio}/#servico",
+                "@id": f"{pagina}#servico",
                 "name": "Rafael Ávila — Terapia online",
-                "url": f"{dominio}/",
+                "url": pagina,
                 "image": image,
-                "provider": {"@id": f"{dominio}/#rafael"},
+                "provider": {"@id": f"{pagina}#rafael"},
                 "areaServed": {"@type": "Country", "name": "Brasil"},
                 "availableLanguage": "pt-BR",
                 "serviceType": "Terapia comportamental online",
@@ -123,9 +129,9 @@ def cabeca(dominio, verificacao=""):
             if verificacao else "")
     return (
         selo
-        + f'  <link rel="canonical" href="{dominio}/">\n'
+        + f'  <link rel="canonical" href="{pagina}">\n'
         '  <meta property="og:type" content="website">\n'
-        f'  <meta property="og:url" content="{dominio}/">\n'
+        f'  <meta property="og:url" content="{pagina}">\n'
         f'  <meta property="og:title" content="{SOCIAL_TITLE}">\n'
         f'  <meta property="og:description" content="{SOCIAL_DESCRIPTION}">\n'
         f'  <meta property="og:image" content="{image}">\n'
@@ -153,7 +159,7 @@ def escrever(path: Path, conteudo: str) -> None:
 
 def validar_contrato(dominio: str, html: str, robots_text: str, sitemap_text: str) -> None:
     image = social_url(dominio)
-    required_html = (f'{dominio}/', image, 'og:image:width', 'twitter:image:alt', '"@graph"')
+    required_html = (landing_url(dominio), image, 'og:image:width', 'twitter:image:alt', '"@graph"')
     if not all(token in html for token in required_html) or "/assets/perfil.png" in html:
         raise SystemExit("[SEO] index.html nao preservou o contrato social/canonico")
     if f"Sitemap: {dominio}/sitemap.xml" not in robots_text:
