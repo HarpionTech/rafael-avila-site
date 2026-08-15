@@ -1030,7 +1030,9 @@ def resilience_browser_scenarios(root: Path) -> dict[str, list[str]]:
                             page.wait_for_timeout(200)
                         else:
                             try:
-                                page.locator("[data-preloader]").wait_for(state="hidden", timeout=3_500)
+                                # A coreografia aprovada espera o objeto da hero (ate 7 s)
+                                # antes de abrir a cortina; o watchdog solta tudo em 9,5 s.
+                                page.locator("[data-preloader]").wait_for(state="hidden", timeout=10_000)
                             except PlaywrightTimeoutError:
                                 failures[name].append("cortina permaneceu visivel")
 
@@ -1125,7 +1127,7 @@ def accessibility_browser_scenarios(root: Path) -> dict[str, list[str]]:
                 """)
                 page = context.new_page()
                 page.goto(f"http://{host}:{port}/", wait_until="load", timeout=20_000)
-                page.locator("[data-preloader]").wait_for(state="hidden", timeout=4_000)
+                page.locator("[data-preloader]").wait_for(state="hidden", timeout=10_000)
 
                 generic_labels = page.locator("span[aria-label], em[aria-label]").count()
                 hidden_motion = page.locator("[data-motion-title] [aria-hidden='true'], #hero-title > span [aria-hidden='true'], #hero-title > em [aria-hidden='true']").count()

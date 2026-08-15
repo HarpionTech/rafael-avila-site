@@ -56,9 +56,9 @@
       "source": "assets/fontes/fontes.css"
     },
     "assets/build/main.min.js": {
-      "bytes": 22682,
+      "bytes": 22943,
       "emitted": "assets/build/main.min.js",
-      "sha256": "81368d8e8444",
+      "sha256": "18077412be8d",
       "source": "assets/js/main.js"
     },
     "assets/build/site.min.css": {
