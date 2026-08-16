@@ -87,7 +87,12 @@ window.CONFIG = {
      relatório está vazio. */
   medicao: {
     ga4Id: '',
-    metaPixelId: ''
+    /* Conjunto de dados "Rafael Terapeuta". A conta do cliente tem mais de um —
+       o outro (1536141878007001) está zerado. Trocar aqui por engano não quebra
+       nada de forma visível: mede para o conjunto errado e só aparece semanas
+       depois. Se algum dia precisar conferir, é o número que a Meta mostra
+       depois de "Identificação", nunca o nome em azul acima dele. */
+    metaPixelId: '2509060272852471'
   },
 
   consentimento: {

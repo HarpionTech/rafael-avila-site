@@ -104,8 +104,27 @@ def static_contract() -> None:
         fail("CSS visual/preloader mudou em relacao a 27a209f")
 
     config = (ROOT / "assets/js/config.js").read_text(encoding="utf-8")
-    if not re.search(r"ga4Id\s*:\s*''", config) or not re.search(r"metaPixelId\s*:\s*''", config):
-        fail("IDs vazios de GA4 e Meta nao estao centralizados em config.js")
+    ga4 = re.search(r"ga4Id\s*:\s*'([^']*)'", config)
+    meta = re.search(r"metaPixelId\s*:\s*'([^']*)'", config)
+    if not ga4 or not meta:
+        fail("ga4Id e metaPixelId precisam existir em config.js como literal simples")
+    # Vazio e um estado valido — e o que mantem a medicao inerte. O que nao pode e
+    # um valor malformado: ele carrega, mede para lugar nenhum e o problema so
+    # aparece semanas depois, com o relatorio vazio.
+    if ga4.group(1) and not re.fullmatch(r"G-[A-Z0-9]{6,12}", ga4.group(1)):
+        fail(f"ga4Id fora do formato G-XXXXXXX: {ga4.group(1)!r}")
+    if meta.group(1) and not re.fullmatch(r"\d{15,16}", meta.group(1)):
+        fail(f"metaPixelId fora do formato (15-16 digitos): {meta.group(1)!r}")
+
+    # config.js e a UNICA fonte. ID repetido em outro arquivo cria a pior falha
+    # possivel: trocar o valor no lugar obvio e a pagina continuar medindo para o
+    # antigo, escondido em algum outro ponto.
+    for caminho in ("assets/js/tracking.js", "assets/js/main.js", "index.html"):
+        texto = (ROOT / caminho).read_text(encoding="utf-8")
+        achado = re.search(r"G-[A-Z0-9]{6,12}\b|\b\d{15,16}\b", texto)
+        if achado:
+            fail(f"{caminho} tem ID de medicao embutido: {achado.group(0)}")
+
     if not (ROOT / "assets/js/tracking.js").is_file():
         fail("assets/js/tracking.js ainda nao existe")
 
