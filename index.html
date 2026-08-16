@@ -77,7 +77,14 @@
   </script>
   <!-- seo:fim -->
 
-  <link rel="preload" as="image" href="assets/hero-1920.webp?v=081ac8bfd6d6" imagesrcset="assets/hero-1280.webp?v=82cc9bb764f8 1280w, assets/hero-1920.webp?v=081ac8bfd6d6 1920w, assets/hero-2560.webp?v=40de2dba9a42 2560w, assets/hero-3840.webp?v=ff70fbc69944 3840w, assets/hero-5120.webp?v=e02624c36b07 5120w" imagesizes="100vw" fetchpriority="high">
+  <!-- O preload vai para a CORTINA, não para a hero: quem pinta primeiro e vira
+       o "maior conteúdo" medido pelo Google é a imagem do preloader, que cobre
+       a tela inteira antes de qualquer outra coisa. Priorizando a hero, o
+       navegador gastava a banda mais cara com uma imagem que só aparece depois
+       da cortina abrir — e o elemento que de fato define o LCP ficava na fila
+       atrás dela. A hero mantém fetchpriority="high" na própria tag e chega a
+       tempo, porque tem os segundos da animação de abertura para carregar. -->
+  <link rel="preload" as="image" href="assets/preloader-1920.webp?v=dd53b8d5fd2b" imagesrcset="assets/preloader-1280.webp?v=4d6e0ad127dd 1280w, assets/preloader-1920.webp?v=dd53b8d5fd2b 1920w, assets/preloader-2560.webp?v=1ada5ac3bf23 2560w" imagesizes="100vw" fetchpriority="high">
   <link rel="stylesheet" href="assets/build/fonts.min.css?v=eb84cae3069d">
   <link rel="stylesheet" href="assets/build/site.min.css?v=23b210a02dad">
 </head>
@@ -295,23 +302,23 @@
             <div class="showcase__ring" data-showcase-ring>
               <div class="showcase__item" data-showcase-item="0" style="--i:0; --razao:1.4">
                 <canvas class="showcase__canvas" data-book3d data-capa="assets/frente do livro fisico.jpeg?v=a83335e4ab19" data-contracapa="assets/capa do livro fisico.jpeg?v=fe2709142ca6" data-razao="1.4" data-espessura="0.16" aria-label="Bem-vindo ao Mundo Real — arraste para girar"></canvas>
-                <img class="showcase__poster" src="assets/livros/3d-mundo-real.webp?v=674d72bd8f9b" alt="Capa do livro Bem-vindo ao Mundo Real" decoding="async">
+                <img class="showcase__poster" src="assets/livros/3d-mundo-real.webp?v=674d72bd8f9b" alt="Capa do livro Bem-vindo ao Mundo Real" loading="lazy" decoding="async">
               </div>
               <div class="showcase__item" data-showcase-item="1" style="--i:1; --razao:1.46">
                 <canvas class="showcase__canvas" data-book3d data-capa="assets/livros/plana-mentalidade.webp?v=13376af3d4fa" data-lombada="assets/livros/lombada-mentalidade.webp?v=1b291c1b0fcf" data-razao="1.46" data-espessura="0.16" aria-label="Mentalidade Blindada — arraste para girar"></canvas>
-                <img class="showcase__poster" src="assets/livros/mock-mentalidade.webp?v=6a6b49e63d73" alt="Capa do e-book Mentalidade Blindada" decoding="async">
+                <img class="showcase__poster" src="assets/livros/mock-mentalidade.webp?v=6a6b49e63d73" alt="Capa do e-book Mentalidade Blindada" loading="lazy" decoding="async">
               </div>
               <div class="showcase__item" data-showcase-item="2" style="--i:2; --razao:1.65">
                 <canvas class="showcase__canvas" data-book3d data-capa="assets/livros/plana-relacionamentos.webp?v=105315876e93" data-razao="1.65" data-espessura="0.16" aria-label="O Segredo dos Relacionamentos Saudáveis — arraste para girar"></canvas>
-                <img class="showcase__poster" src="assets/livros/mock-relacionamentos.webp?v=8383ab556263" alt="Capa do e-book O Segredo dos Relacionamentos Saudáveis" decoding="async">
+                <img class="showcase__poster" src="assets/livros/mock-relacionamentos.webp?v=8383ab556263" alt="Capa do e-book O Segredo dos Relacionamentos Saudáveis" loading="lazy" decoding="async">
               </div>
               <div class="showcase__item" data-showcase-item="3" style="--i:3; --razao:1.52">
                 <canvas class="showcase__canvas" data-book3d data-capa="assets/livros/plana-autoterapia.webp?v=ca52519c2ddd" data-razao="1.52" data-espessura="0.16" data-pose="-0.454" aria-label="Autoterapia — arraste para girar"></canvas>
-                <img class="showcase__poster" src="assets/livros/mock-autoterapia.webp?v=3c8fb15bb1ec" alt="Capa do e-book Autoterapia" decoding="async">
+                <img class="showcase__poster" src="assets/livros/mock-autoterapia.webp?v=3c8fb15bb1ec" alt="Capa do e-book Autoterapia" loading="lazy" decoding="async">
               </div>
               <div class="showcase__item" data-showcase-item="4" style="--i:4; --razao:1.65">
                 <canvas class="showcase__canvas" data-book3d data-capa="assets/livros/plana-autoconfianca.webp?v=fb727ca9e3d7" data-razao="1.65" data-espessura="0.16" aria-label="Autoconfiança: Pare de se Diminuir — arraste para girar"></canvas>
-                <img class="showcase__poster" src="assets/livros/plana-autoconfianca.webp?v=fb727ca9e3d7" alt="Capa do e-book Autoconfiança: Pare de se Diminuir" decoding="async">
+                <img class="showcase__poster" src="assets/livros/plana-autoconfianca.webp?v=fb727ca9e3d7" alt="Capa do e-book Autoconfiança: Pare de se Diminuir" loading="lazy" decoding="async">
               </div>
             </div>
             <div class="showcase__floor" aria-hidden="true"></div>
