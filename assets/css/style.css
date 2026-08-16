@@ -1151,11 +1151,13 @@ body.esta-carregando { overflow: hidden; }
 .consent__texto { margin: 0; color: #b9b2a7; font-size: .78rem; line-height: 1.5; }
 .consent__texto a { color: var(--bronze-light); text-decoration: underline; text-underline-offset: .2em; }
 .consent__acoes { display: flex; flex: none; gap: .6rem; align-items: center; }
-/* Ação única e larga: sem um segundo botão ao lado, ela vira o destino óbvio da
-   caixa e não precisa competir por atenção. */
-.consent__acoes .liquid-button { min-width: 170px; min-height: 48px; font-size: .74rem; }
+/* Os dois botões têm a MESMA área de toque: aceitar e recusar custam um clique
+   cada. A hierarquia vem da cor, não do tamanho — recusa menor ou mais estreita
+   é o truque que as autoridades europeias tratam como consentimento inválido. */
+.consent__acoes .liquid-button { min-width: 140px; min-height: 48px; font-size: .74rem; }
 /* "Personalizar" como texto e não como terceiro botão cheio: três peças de mesmo
-   peso viram uma fileira sem hierarquia, e nenhuma das três é lida. */
+   peso viram uma fileira sem hierarquia, e nenhuma das três é lida. Aqui ele é o
+   caminho do meio-termo, não a única saída de quem não quer aceitar. */
 .consent__link { padding: .5rem .2rem; background: none; border: 0; color: #b9b2a7; font-size: .72rem; text-decoration: underline; text-underline-offset: .25em; cursor: pointer; }
 .consent__link:hover { color: var(--bronze-light); }
 
@@ -1205,8 +1207,12 @@ body.esta-carregando { overflow: hidden; }
   .consent__icone { width: 22px; height: 22px; }
   .consent__corpo { flex-basis: calc(100% - 2.8rem); }
   .consent__texto { font-size: .74rem; }
-  .consent__acoes { width: 100%; }
+  /* Os dois botões dividem a linha e "Personalizar" desce para a sua própria,
+     centralizado: os três na mesma linha dariam três alvos estreitos demais para
+     o polegar, e é o link — não a recusa — que pode esperar a segunda linha. */
+  .consent__acoes { width: 100%; flex-wrap: wrap; }
   .consent__acoes .liquid-button { flex: 1; min-width: 0; }
+  .consent__link { order: 1; width: 100%; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   .consent { transition: opacity .2s linear, visibility .2s; transform: none; }

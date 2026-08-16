@@ -943,13 +943,14 @@
         <p class="consent__texto">${esc(cfg.texto)}${cfg.politica
           ? ` <a href="${esc(cfg.politica)}" target="_blank" rel="noopener">Política de privacidade</a>` : ''}</p>
       </div>
-      <!-- Uma acao em destaque na primeira tela; a recusa mora no painel, a um
-           clique de "Personalizar". Decisao do cliente, tomada com a ressalva
-           registrada: e o padrao do mercado brasileiro, e e tambem o desenho que
-           autoridades europeias ja multaram. Para voltar ao par visivel, basta
-           reintroduzir aqui um botao com data-consent="nada". -->
+      <!-- Aceitar e recusar ficam lado a lado, na mesma tela e com o mesmo custo
+           de um clique. E o desenho que a LGPD pede e o unico que as autoridades
+           europeias nao multaram: esconder a recusa atras de "Personalizar"
+           transforma o aviso em funil de aceite. A diferenca de peso visual
+           (dourado x escuro) e legitima; a diferenca de esforco nao seria. -->
       <div class="consent__acoes">
         <button class="consent__link" type="button" data-consent="personalizar">${esc(cfg.personalizar || 'Personalizar')}</button>
+        <button class="liquid-button liquid-button-dark" type="button" data-consent="nada">${esc(cfg.recusar || 'Recusar')}</button>
         <button class="liquid-button liquid-button-gold" type="button" data-consent="tudo">${esc(cfg.aceitar)}</button>
       </div>`;
 

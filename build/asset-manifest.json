@@ -56,15 +56,15 @@
       "source": "assets/fontes/fontes.css"
     },
     "assets/build/main.min.js": {
-      "bytes": 22943,
+      "bytes": 23080,
       "emitted": "assets/build/main.min.js",
-      "sha256": "18077412be8d",
+      "sha256": "ae78f4e0f032",
       "source": "assets/js/main.js"
     },
     "assets/build/site.min.css": {
-      "bytes": 50874,
+      "bytes": 50941,
       "emitted": "assets/build/site.min.css",
-      "sha256": "686813001eb9",
+      "sha256": "23b210a02dad",
       "source": "assets/css/style.css"
     },
     "assets/capa do livro fisico.jpeg": {
