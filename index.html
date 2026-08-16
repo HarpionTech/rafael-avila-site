@@ -257,7 +257,11 @@
 
         <div class="about-grid">
           <figure class="about-portrait">
-            <img src="assets/perfil.png?v=018a89d6a88e" alt="Retrato de Rafael Ávila" width="1254" height="1254" loading="lazy" decoding="async">
+            <!-- O CSS limita este retrato a 560px de largura, então a versão de
+                 640 serve a maioria das telas e a de 1254 fica para as de alta
+                 densidade. `sizes` diz o espaço real, senão o navegador assume a
+                 viewport inteira e escolhe sempre a maior. -->
+            <img src="assets/perfil-640.webp?v=9e66357487ba" srcset="assets/perfil-640.webp?v=9e66357487ba 640w, assets/perfil-1254.webp?v=0278bc10711e 1254w" sizes="(max-width: 860px) 100vw, 560px" alt="Retrato de Rafael Ávila" width="1254" height="1254" loading="lazy" decoding="async">
             <figcaption class="about-portrait-tag glass-panel"><span>Rafael Ávila</span></figcaption>
           </figure>
 
@@ -284,24 +288,24 @@
         </header>
 
         <div class="testimonial-grid">
-          <a class="testimonial-card" href="assets/depoimento (1).png?v=3ffab5e91170" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Daiane Lacerda em tamanho integral">
-            <span class="testimonial-shot"><img src="assets/depoimento (1).png?v=3ffab5e91170" alt="Depoimento original de Daiane Lacerda" width="640" height="1138" loading="lazy" decoding="async"></span>
+          <a class="testimonial-card" href="assets/depoimento-1.webp?v=48a188a750f0" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Daiane Lacerda em tamanho integral">
+            <span class="testimonial-shot"><img src="assets/depoimento-1.webp?v=48a188a750f0" alt="Depoimento original de Daiane Lacerda" width="625" height="1233" loading="lazy" decoding="async"></span>
             <span class="testimonial-foot"><strong>Daiane Lacerda</strong></span>
           </a>
-          <a class="testimonial-card" href="assets/depoimento (2).png?v=374f4173f3a7" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Felipe Brito em tamanho integral">
-            <span class="testimonial-shot"><img src="assets/depoimento (2).png?v=374f4173f3a7" alt="Depoimento original de Felipe Brito" width="640" height="1138" loading="lazy" decoding="async"></span>
+          <a class="testimonial-card" href="assets/depoimento-2.webp?v=73bfe09e6599" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Felipe Brito em tamanho integral">
+            <span class="testimonial-shot"><img src="assets/depoimento-2.webp?v=73bfe09e6599" alt="Depoimento original de Felipe Brito" width="629" height="1211" loading="lazy" decoding="async"></span>
             <span class="testimonial-foot"><strong>Felipe Brito</strong></span>
           </a>
-          <a class="testimonial-card" href="assets/depoimento (3).png?v=11830ab1e457" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Renata Frota em tamanho integral">
-            <span class="testimonial-shot"><img src="assets/depoimento (3).png?v=11830ab1e457" alt="Depoimento original de Renata Frota" width="640" height="1138" loading="lazy" decoding="async"></span>
+          <a class="testimonial-card" href="assets/depoimento-3.webp?v=4c5fbfa69e24" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Renata Frota em tamanho integral">
+            <span class="testimonial-shot"><img src="assets/depoimento-3.webp?v=4c5fbfa69e24" alt="Depoimento original de Renata Frota" width="653" height="1169" loading="lazy" decoding="async"></span>
             <span class="testimonial-foot"><strong>Renata Frota</strong></span>
           </a>
-          <a class="testimonial-card" href="assets/depoimento (4).png?v=e6d0de07f1e8" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Victor Lima em tamanho integral">
-            <span class="testimonial-shot"><img src="assets/depoimento (4).png?v=e6d0de07f1e8" alt="Depoimento original de Victor Lima" width="640" height="1138" loading="lazy" decoding="async"></span>
+          <a class="testimonial-card" href="assets/depoimento-4.webp?v=00bfaffba91a" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Victor Lima em tamanho integral">
+            <span class="testimonial-shot"><img src="assets/depoimento-4.webp?v=00bfaffba91a" alt="Depoimento original de Victor Lima" width="553" height="1188" loading="lazy" decoding="async"></span>
             <span class="testimonial-foot"><strong>Victor Lima</strong></span>
           </a>
-          <a class="testimonial-card" href="assets/depoimento (5).png?v=a8137f642878" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Greicy Batista em tamanho integral">
-            <span class="testimonial-shot"><img src="assets/depoimento (5).png?v=a8137f642878" alt="Depoimento original de Greicy Batista" width="640" height="1138" loading="lazy" decoding="async"></span>
+          <a class="testimonial-card" href="assets/depoimento-5.webp?v=c2a996fbe63d" target="_blank" rel="noopener" aria-label="Abrir Depoimento original de Greicy Batista em tamanho integral">
+            <span class="testimonial-shot"><img src="assets/depoimento-5.webp?v=c2a996fbe63d" alt="Depoimento original de Greicy Batista" width="610" height="1314" loading="lazy" decoding="async"></span>
             <span class="testimonial-foot"><strong>Greicy Batista</strong></span>
           </a>
         </div>

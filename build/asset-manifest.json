@@ -79,35 +79,35 @@
       "sha256": "fe2709142ca6",
       "source": "assets/capa do livro fisico.jpeg"
     },
-    "assets/depoimento (1).png": {
-      "bytes": 845014,
-      "emitted": "assets/depoimento (1).png",
-      "sha256": "3ffab5e91170",
-      "source": "assets/depoimento (1).png"
+    "assets/depoimento-1.webp": {
+      "bytes": 91280,
+      "emitted": "assets/depoimento-1.webp",
+      "sha256": "48a188a750f0",
+      "source": "assets/depoimento-1.webp"
     },
-    "assets/depoimento (2).png": {
-      "bytes": 776282,
-      "emitted": "assets/depoimento (2).png",
-      "sha256": "374f4173f3a7",
-      "source": "assets/depoimento (2).png"
+    "assets/depoimento-2.webp": {
+      "bytes": 73262,
+      "emitted": "assets/depoimento-2.webp",
+      "sha256": "73bfe09e6599",
+      "source": "assets/depoimento-2.webp"
     },
-    "assets/depoimento (3).png": {
-      "bytes": 865107,
-      "emitted": "assets/depoimento (3).png",
-      "sha256": "11830ab1e457",
-      "source": "assets/depoimento (3).png"
+    "assets/depoimento-3.webp": {
+      "bytes": 91560,
+      "emitted": "assets/depoimento-3.webp",
+      "sha256": "4c5fbfa69e24",
+      "source": "assets/depoimento-3.webp"
     },
-    "assets/depoimento (4).png": {
-      "bytes": 766432,
-      "emitted": "assets/depoimento (4).png",
-      "sha256": "e6d0de07f1e8",
-      "source": "assets/depoimento (4).png"
+    "assets/depoimento-4.webp": {
+      "bytes": 91800,
+      "emitted": "assets/depoimento-4.webp",
+      "sha256": "00bfaffba91a",
+      "source": "assets/depoimento-4.webp"
     },
-    "assets/depoimento (5).png": {
-      "bytes": 1018905,
-      "emitted": "assets/depoimento (5).png",
-      "sha256": "a8137f642878",
-      "source": "assets/depoimento (5).png"
+    "assets/depoimento-5.webp": {
+      "bytes": 126850,
+      "emitted": "assets/depoimento-5.webp",
+      "sha256": "c2a996fbe63d",
+      "source": "assets/depoimento-5.webp"
     },
     "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxakybaba.woff2": {
       "bytes": 29512,
@@ -277,11 +277,17 @@
       "sha256": "105315876e93",
       "source": "assets/livros/plana-relacionamentos.webp"
     },
-    "assets/perfil.png": {
-      "bytes": 2010234,
-      "emitted": "assets/perfil.png",
-      "sha256": "018a89d6a88e",
-      "source": "assets/perfil.png"
+    "assets/perfil-1254.webp": {
+      "bytes": 67576,
+      "emitted": "assets/perfil-1254.webp",
+      "sha256": "0278bc10711e",
+      "source": "assets/perfil-1254.webp"
+    },
+    "assets/perfil-640.webp": {
+      "bytes": 21154,
+      "emitted": "assets/perfil-640.webp",
+      "sha256": "9e66357487ba",
+      "source": "assets/perfil-640.webp"
     },
     "assets/preloader-1280.webp": {
       "bytes": 24462,
