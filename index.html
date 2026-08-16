@@ -158,7 +158,11 @@
 
   <header class="site-header" data-header>
     <div class="header-inner">
-      <a class="brand" href="/terapia" aria-label="Rafael Ávila — início">
+      <!-- Âncora, não URL. Apontando para /terapia o navegador recarregava a
+           página inteira a cada clique — cortina, scripts e tudo —, quando a
+           intenção é só voltar ao topo. O header fixo é compensado pelo
+           scroll-padding-top que já existe no CSS. -->
+      <a class="brand" href="#inicio" aria-label="Rafael Ávila — início">
         <span class="brand-copy"><strong>Rafael Ávila</strong><small>Terapeuta · Método · Vida real</small></span>
       </a>
 
