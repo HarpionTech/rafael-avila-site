@@ -15,6 +15,7 @@ const CSS_INPUTS = [
 const JS_INPUTS = [
   ['assets/js/config.js', 'assets/build/config.min.js'],
   ['assets/js/main.js', 'assets/build/main.min.js'],
+  ['assets/js/tracking.js', 'assets/build/tracking.min.js'],
   ['assets/js/book-3d.js', 'assets/build/book-3d.min.js'],
   ['assets/js/brain-particles.js', 'assets/build/brain-particles.min.js'],
 ];

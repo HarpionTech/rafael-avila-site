@@ -19,6 +19,7 @@
     "check:lh:core": "lhci autorun --config=./lighthouserc.json",
     "check:performance": "python -u build/check_phase18.py --group performance",
     "check:phase18": "npm run check:static && npm run check:browser && npm run check:lh && npm run check:performance",
+    "check:tracking": "npm run build && python -u build/check_tracking.py",
     "check:phase19": "npm run build && python -u build/check_phase19.py --group pipeline --group versioning --group reproducibility && npm run check:phase18"
   },
   "devDependencies": {

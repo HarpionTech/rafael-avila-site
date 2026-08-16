@@ -794,6 +794,7 @@
 
   const Consentimento = (() => {
     const inscritos = [];                       // { categoria, fn }
+    const observadores = [];                    // avisados a cada decisão nova
     const cfg = () => C.consentimento || {};
     const cats = () => cfg().categorias || [];
     // Categoria `fixo` nasce ligada e não desliga: é o mínimo para o site operar.
@@ -826,6 +827,10 @@
         }));
       } catch (e) { /* navegação privada: vale para esta sessão e pronto */ }
       dispara();
+      /* `ao` só serve para LIGAR: cada inscrito sai da fila ao disparar. Quem
+         precisa saber que algo foi DESLIGADO — para apagar cookie já criado,
+         por exemplo — escuta aqui, que roda em toda decisão. */
+      observadores.forEach((fn) => { try { fn(); } catch (e) { /* um não derruba os outros */ } });
     };
 
     return {
@@ -840,7 +845,8 @@
          visitante é novo — e sem o Pixel conhecer o banner. */
       ao: (categoria, fn) => {
         if (permitido(categoria)) fn(); else inscritos.push({ categoria, fn });
-      }
+      },
+      aoMudar: (fn) => { observadores.push(fn); }
     };
   })();
   window.Consentimento = Consentimento;
@@ -848,10 +854,10 @@
   /* Painel de preferências. Aberto pelo banner e também pelo link do rodapé, que
      é como alguém volta atrás depois de ter decidido — exigência da LGPD: a
      escolha tem de ser revogável com a mesma facilidade com que foi dada. */
-  /* `aoDecidir` só é chamado quando SAI uma decisão — salvar ou recusar. Fechar
-     no X, no Esc ou no véu não decide nada, e é justamente por isso que o aviso
-     que abriu este painel continua de pé atrás dele: sem decisão, o visitante
-     volta para onde estava em vez de ficar sem nenhuma das duas coisas. */
+  /* `aoDecidir` só é chamado quando SAI uma decisão — aqui, salvar. Fechar no X,
+     no Esc ou no véu não decide nada, e é justamente por isso que o aviso que
+     abriu este painel continua de pé atrás dele: sem decisão, o visitante volta
+     para onde estava em vez de ficar sem nenhuma das duas coisas. */
   function abrePainelCookies(aoDecidir) {
     const cfg = C.consentimento;
     if (!cfg || $('.prefs')) return;
@@ -883,8 +889,11 @@
               </div>
             </li>`).join('')}
         </ul>
+        <!-- Só salvar. A recusa em massa mora no aviso, ao lado do aceite, e
+             repeti-la aqui daria duas portas para a mesma decisão: quem abriu
+             este painel veio escolher por categoria, e desligar as chaves faz
+             exatamente o que o "Recusar" faria. -->
         <div class="prefs__acoes">
-          <button class="liquid-button liquid-button-dark" type="button" data-prefs="nada">${esc(cfg.recusar)}</button>
           <button class="liquid-button liquid-button-gold" type="button" data-prefs="salvar">${esc(cfg.salvar || 'Salvar')}</button>
         </div>
       </div>`;
@@ -909,7 +918,6 @@
       $$('input[data-cat]', painel).forEach((i) => { escolha[i.dataset.cat] = i.checked; });
       Consentimento.registra(escolha);
     }));
-    $('[data-prefs="nada"]', painel).addEventListener('click', () => decide(() => Consentimento.nada()));
     $('.prefs__fechar', painel).addEventListener('click', fecha);
     // Clique no véu fecha; dentro da caixa, não.
     painel.addEventListener('click', (e) => { if (e.target === painel) fecha(); });

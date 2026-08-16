@@ -44,9 +44,9 @@
       "source": "assets/js/brain-particles.js"
     },
     "assets/build/config.min.js": {
-      "bytes": 2554,
+      "bytes": 2588,
       "emitted": "assets/build/config.min.js",
-      "sha256": "d36498816798",
+      "sha256": "febbe9fca8ab",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
@@ -56,9 +56,9 @@
       "source": "assets/fontes/fontes.css"
     },
     "assets/build/main.min.js": {
-      "bytes": 23080,
+      "bytes": 23242,
       "emitted": "assets/build/main.min.js",
-      "sha256": "ae78f4e0f032",
+      "sha256": "0dbf4ccc335d",
       "source": "assets/js/main.js"
     },
     "assets/build/site.min.css": {
@@ -66,6 +66,12 @@
       "emitted": "assets/build/site.min.css",
       "sha256": "23b210a02dad",
       "source": "assets/css/style.css"
+    },
+    "assets/build/tracking.min.js": {
+      "bytes": 2656,
+      "emitted": "assets/build/tracking.min.js",
+      "sha256": "d4bbb9275202",
+      "source": "assets/js/tracking.js"
     },
     "assets/capa do livro fisico.jpeg": {
       "bytes": 168289,

@@ -77,6 +77,19 @@ window.CONFIG = {
     ]
   },
 
+  /* Os dois IDs de medição. VAZIO É O ESTADO CORRETO enquanto não chegarem: o
+     adaptador não carrega nada, não cria cookie e não há o que revogar. Ligar a
+     medição é preencher estas duas linhas — não há segundo lugar para mexer.
+
+     Formato conferido antes de carregar: `G-` seguido do código, e o Pixel só
+     dígitos. ID errado não falha visivelmente — ele carrega, mede para lugar
+     nenhum e só aparece semanas depois, quando o cliente pergunta por que o
+     relatório está vazio. */
+  medicao: {
+    ga4Id: '',
+    metaPixelId: ''
+  },
+
   consentimento: {
     versao: 1,
     titulo: 'Cookies e privacidade',
