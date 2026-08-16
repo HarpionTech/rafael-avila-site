@@ -86,7 +86,10 @@ window.CONFIG = {
      nenhum e só aparece semanas depois, quando o cliente pergunta por que o
      relatório está vazio. */
   medicao: {
-    ga4Id: '',
+    /* Propriedade "rafaelavilaterapeuta.com.br", conta "Rafael Ávila". Fuso de
+       Brasília e moeda em real — o fuso é o único campo do GA4 que não corrige o
+       histórico depois de gravado. */
+    ga4Id: 'G-6JFN1KNEE1',
     /* Conjunto de dados "Rafael Terapeuta". A conta do cliente tem mais de um —
        o outro (1536141878007001) está zerado. Trocar aqui por engano não quebra
        nada de forma visível: mede para o conjunto errado e só aparece semanas
