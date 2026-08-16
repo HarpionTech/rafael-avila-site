@@ -129,18 +129,31 @@
      telefone e a frase da consulta, e mandar isso para o Google ou para a Meta
      seria transformar um clique em dado pessoal de saúde no relatório de um
      terceiro. Só `position` e `product` atravessam. */
+  /* Cada plataforma recebe o nome na convenção DELA. No GA4 vale o nome
+     descritivo em snake_case, que é o que aparece legível no relatório. Na Meta
+     valem os nomes do catálogo padrão: só eles aparecem sozinhos na lista de
+     eventos de conversão ao montar a campanha. Evento de nome próprio exigiria
+     criar uma "conversão personalizada" no painel antes — passo a mais que o
+     cliente não vai descobrir, e sem ele o anúncio não otimiza por nada disso.
+
+     `AddToCart` no clique do livro e não `InitiateCheckout`: a Hotmart dispara
+     InitiateCheckout e Purchase do lado dela, e repetir um dos dois contaria a
+     mesma intenção duas vezes. Assim o funil fica AddToCart (aqui) →
+     InitiateCheckout → Purchase (lá), sem sobreposição. */
   const NOME_META = {
-    whatsapp_click: 'WhatsAppClick',
-    hotmart_click: 'HotmartClick'
+    whatsapp_click: 'Contact',
+    hotmart_click: 'AddToCart'
   };
 
   function dispara(nome, dados) {
     if (permitido('estatisticas') && estado.ga4) window.gtag('event', nome, dados);
-    /* `trackCustom`, não `InitiateCheckout`: a própria Hotmart dispara os
-       eventos de funil no checkout dela. Usar o nome padrão aqui contaria a
-       mesma intenção duas vezes e estragaria o custo por conversão do anúncio. */
     if (permitido('marketing') && estado.meta) {
-      window.fbq('trackCustom', NOME_META[nome] || nome, dados);
+      const padrao = NOME_META[nome];
+      /* `track` para os do catálogo, `trackCustom` para o resto: mandar um nome
+         padrão via trackCustom faz a Meta registrar como personalizado e o
+         evento não conta como o padrão que aparenta ser. */
+      if (padrao) window.fbq('track', padrao, dados);
+      else window.fbq('trackCustom', nome, dados);
     }
   }
 

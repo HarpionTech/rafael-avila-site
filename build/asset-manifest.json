@@ -68,9 +68,9 @@
       "source": "assets/css/style.css"
     },
     "assets/build/tracking.min.js": {
-      "bytes": 2656,
+      "bytes": 2684,
       "emitted": "assets/build/tracking.min.js",
-      "sha256": "d4bbb9275202",
+      "sha256": "ed935e2ba5cd",
       "source": "assets/js/tracking.js"
     },
     "assets/capa do livro fisico.jpeg": {
