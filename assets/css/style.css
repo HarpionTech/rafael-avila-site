@@ -81,6 +81,27 @@ button, a { touch-action: manipulation; }
    então a sala não se repete a cada seção — repetir a estante simétrica cinco
    vezes denunciaria na hora que é a mesma imagem. O véu por cima mantém o texto
    legível; sem ele o contraste cai abaixo do mínimo em cima das prateleiras. */
+/* A folha completa é carregada sem bloquear a pintura, para a cortina aparecer
+   no primeiro quadro. O efeito colateral é que, por um instante, o conteúdo
+   existiria sem estilo e se reposicionaria inteiro quando ela chegasse — um
+   salto de layout que o Chrome mede mesmo estando escondido atrás da cortina,
+   e que sozinho levou o CLS de 0.002 para 1.001.
+
+   Manter esse conteúdo FORA do layout até lá resolve pela raiz: elemento que
+   nunca foi posicionado não tem de onde saltar, e elemento que entra pela
+   primeira vez não conta como deslocamento. A classe é posta pelo onload da
+   própria folha; sem JavaScript, o <noscript> traz a folha bloqueante e
+   devolve a exibição.
+
+   O `data-css-adiado` no <html> é o que limita a regra à página que de fato
+   adia a folha. Esta mesma folha serve a política, que a carrega bloqueando e
+   nunca receberia a classe — sem o escopo, aquela página abriria em branco
+   para sempre. */
+html[data-css-adiado]:not(.css-pronto) body > header,
+html[data-css-adiado]:not(.css-pronto) body > main,
+html[data-css-adiado]:not(.css-pronto) body > footer,
+html[data-css-adiado]:not(.css-pronto) body > .sticky-wa { display: none; }
+
 .page-bg { position: fixed; z-index: -2; inset: 0; overflow: hidden; pointer-events: none; }
 .page-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 /* Um véu só, calibrado: antes eu empilhava opacity .5 na imagem COM um véu de

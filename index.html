@@ -85,8 +85,26 @@
        atrás dela. A hero mantém fetchpriority="high" na própria tag e chega a
        tempo, porque tem os segundos da animação de abertura para carregar. -->
   <link rel="preload" as="image" href="assets/preloader-1920.webp?v=dd53b8d5fd2b" imagesrcset="assets/preloader-1280.webp?v=4d6e0ad127dd 1280w, assets/preloader-1920.webp?v=dd53b8d5fd2b 1920w, assets/preloader-2560.webp?v=1ada5ac3bf23 2560w" imagesizes="100vw" fetchpriority="high">
+  <!-- Escrito pelo build a partir do próprio style.css. Não editar à mão: o que
+       estiver aqui é substituído no próximo `npm run build`. -->
+  <style>/* css-critico:inicio */:root{--header-height: 60px;--paper: #0b0b0c;--paper-light: #121214;--paper-deep: #17171a;--ink: #f2ede3;--ink-soft: #b8b1a4;--dark: #08080a;--dark-soft: #101012;--muted: #8b857b;--bronze: #c8a96a;--bronze-light: #e2c88f;--line: rgba(226, 200, 143, .16);--line-light: rgba(226, 200, 143, .14);--white: #f6f2ea;--whatsapp: #c8a96a;--serif: "Newsreader", Georgia, serif;--sans: "IBM Plex Sans", sans-serif;--container: 1260px;--gutter: clamp(1rem, 3.5vw, 3rem);--section-space: clamp(6rem, 10vw, 10rem);--glass-blur: 18px;--ease-out: cubic-bezier(.16, 1, .3, 1);--z-header: 100;--z-floating: 90}html{scroll-padding-top:64px;background:var(--paper)}body{margin:0;overflow-x:hidden;background:transparent;color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}body.menu-open{overflow:hidden}html[data-css-adiado]:not(.css-pronto) body>header,html[data-css-adiado]:not(.css-pronto) body>main,html[data-css-adiado]:not(.css-pronto) body>footer,html[data-css-adiado]:not(.css-pronto) body>.sticky-wa{display:none}.page-bg{position:fixed;z-index:-2;inset:0;overflow:hidden;pointer-events:none}.page-bg img{width:100%;height:100%;object-fit:cover;object-position:center}.preloader{display:none;position:fixed;z-index:300;inset:0;overflow:hidden;background:transparent;pointer-events:none}.preloader-capable .preloader{display:block;pointer-events:auto}.preloader__metade{position:absolute;right:0;left:0;height:50.2%;overflow:hidden;background:#0b0b0c;will-change:transform}.preloader__metade--topo{top:0}.preloader__metade--base{bottom:0}.preloader__metade img{position:absolute;right:0;left:0;width:100%;height:100vh;object-fit:cover}.preloader__metade--topo img{top:0}.preloader__metade--base img{bottom:0}.preloader__luz{position:absolute;z-index:4;top:50%;left:0;width:100%;height:2px;transform:translateY(-50%) scaleX(0);background:linear-gradient(90deg,transparent,rgba(226,200,143,.85) 10%,#fff6e2 50%,rgba(226,200,143,.85) 90%,transparent);box-shadow:0 0 26px 5px #ffecbe80,0 0 78px 20px #e2c88f40;pointer-events:none}.preloader__marca{position:absolute;z-index:3;top:50%;left:50%;display:grid;justify-items:center;transform:translate(-50%,-50%)}.preloader__titulo{margin:0;color:var(--bronze);font-family:var(--serif);font-size:clamp(2.1rem,8.5vw,6rem);font-weight:400;letter-spacing:.2em;text-indent:.2em;line-height:1;text-transform:uppercase;white-space:nowrap;animation:respira-bemvindo 2.2s ease-in-out infinite}body.esta-carregando{overflow:hidden}@media(prefers-reduced-motion:reduce){.preloader{transition:opacity .3s linear}.preloader__titulo{animation:none;opacity:1}}@media(max-width:860px){:root{--header-height: 58px}html{scroll-padding-top:60px}}@media(max-width:620px){:root{--gutter: 1rem;--section-space: 4.5rem}}@keyframes respira-bemvindo{0%,to{opacity:.45}50%{opacity:1}}/* css-critico:fim */</style>
+
+  <!-- Quem marca o adiamento é o próprio JavaScript, e essa inversão é a parte
+       importante: sem JS, o atributo nunca aparece, a regra de ocultação nunca
+       casa e o conteúdo fica visível desde o primeiro quadro — sem depender de
+       `!important` no <noscript> para desfazer o que outra regra fez. O
+       <noscript> abaixo cuida só de trazer a folha de volta como bloqueante. -->
+  <script>document.documentElement.dataset.cssAdiado = '';</script>
+
   <link rel="stylesheet" href="assets/build/fonts.min.css?v=eb84cae3069d">
-  <link rel="stylesheet" href="assets/build/site.min.css?v=23b210a02dad">
+  <!-- `media="print"` faz o navegador baixar sem bloquear a pintura, e o onload
+       devolve para `all` assim que chega. Sem isso, a cortina — que é o primeiro
+       quadro inteiro — esperava a folha completa mesmo com a imagem já em cache,
+       e era daí que vinham 87% do LCP. O FOUC que a técnica normalmente cobra
+       não aparece aqui: enquanto a folha não chega, a cortina cobre a tela, e o
+       CSS dela já veio inline acima. -->
+  <link rel="stylesheet" href="assets/build/site.min.css?v=92591ae4232a" media="print" onload="this.media='all';document.documentElement.classList.add('css-pronto')">
+  <noscript><link rel="stylesheet" href="assets/build/site.min.css?v=92591ae4232a"></noscript>
 </head>
 <body>
   <!-- A cortina é opt-in: sem JavaScript o estado base já é a página final. O

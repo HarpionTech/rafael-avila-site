@@ -84,6 +84,14 @@ def extract_function(source: str, name: str) -> str:
     fail(f"funcao {name} incompleta")
 
 
+def preloader_rules(fonte) -> str:
+    """As regras que desenham a cortina, isoladas do resto da folha."""
+    css = fonte.read_text(encoding="utf-8") if hasattr(fonte, "read_text") else fonte
+    sem_comentario = re.sub(r"/\*[\s\S]*?\*/", "", css)
+    regras = re.findall(r"([^{}]*\.preloader[^{}]*)\{([^}]*)\}", sem_comentario)
+    return "".join(f"{' '.join(s.split())}{{{' '.join(c.split())}}}" for s, c in regras)
+
+
 def static_contract() -> None:
     current_main = (ROOT / "assets/js/main.js").read_text(encoding="utf-8")
     if extract_function(current_main, "setupPreloader") != extract_function(git_show("assets/js/main.js"), "setupPreloader"):
@@ -95,13 +103,14 @@ def static_contract() -> None:
     if not block.search(current_html) or block.search(current_html).group(0) != block.search(base_html).group(0):
         fail("markup da cortina mudou em relacao a 27a209f")
 
-    css_diff = subprocess.run(
-        ["git", "diff", "--quiet", BASE_COMMIT, "--", "assets/css/style.css"],
-        cwd=ROOT,
-        check=False,
-    )
-    if css_diff.returncode:
-        fail("CSS visual/preloader mudou em relacao a 27a209f")
+    # Antes isto proibia QUALQUER mudanca no style.css. Servia enquanto o trabalho
+    # em curso era tracking — nenhuma linha de CSS tinha o que fazer ali —, mas
+    # como contrato permanente proibia tambem o que nao tem nada a ver com o
+    # preloader, e o trabalho seguinte (LCP) precisou justamente disso. O que
+    # importa proteger e a cortina: se as regras dela mudarem sem intencao, a
+    # abertura quebra de um jeito que nenhum outro teste aqui pegaria.
+    if preloader_rules(ROOT / "assets/css/style.css") != preloader_rules(git_show("assets/css/style.css")):
+        fail(f"regras CSS do preloader mudaram em relacao a {BASE_COMMIT}")
 
     config = (ROOT / "assets/js/config.js").read_text(encoding="utf-8")
     ga4 = re.search(r"ga4Id\s*:\s*'([^']*)'", config)

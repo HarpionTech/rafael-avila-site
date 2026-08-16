@@ -23,6 +23,70 @@ const SOURCE_TO_OUTPUT = new Map([...CSS_INPUTS, ...JS_INPUTS]);
 const VERSIONABLE = /\.(?:avif|css|gif|jpe?g|js|png|svg|webp|woff2?)$/i;
 const HTML_ATTR = /\b(href|src|srcset|imagesrcset|data-capa|data-contracapa|data-lombada)=(['"])(.*?)\2/gi;
 
+// CSS crítico: o que precisa existir para o primeiro quadro estar CERTO.
+// Folha externa é render-blocking — o navegador não pinta um pixel sequer antes
+// dela chegar —, e o primeiro quadro desta página é a cortina inteira. Era isso
+// que segurava a pintura mesmo com a imagem já baixada e em cache.
+//
+// Extraído do próprio style.css a cada build, nunca copiado à mão: cópia manual
+// de CSS crítico é a que envelhece calada, e o sintoma seria a cortina abrindo
+// desmontada meses depois, sem ninguém ligar uma coisa à outra.
+const CRITICO = /(?:^|,)\s*(?::root\b|html\b|body\b|\.preloader|\.page-bg|\.esta-carregando|\.preloader-capable)/;
+
+function splitTopLevel(css) {
+  const blocks = [];
+  let depth = 0;
+  let start = 0;
+  let inString = null;
+  for (let i = 0; i < css.length; i++) {
+    const c = css[i];
+    if (inString) {
+      if (c === inString && css[i - 1] !== '\\') inString = null;
+      continue;
+    }
+    if (c === '"' || c === "'") { inString = c; continue; }
+    if (c === '{') depth++;
+    else if (c === '}') {
+      depth--;
+      if (depth === 0) { blocks.push(css.slice(start, i + 1)); start = i + 1; }
+    }
+  }
+  return blocks;
+}
+
+/* Percorre também o interior de @media e @supports: as regras que ajustam a
+   cortina em tela pequena e em prefers-reduced-motion moram lá, e sem elas o
+   primeiro quadro sairia com a régua do desktop no celular. */
+function extractCritical(css) {
+  const sem = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const saida = [];
+  for (const block of splitTopLevel(sem)) {
+    const cabeca = block.slice(0, block.indexOf('{')).trim();
+    if (/^@(?:media|supports)/.test(cabeca)) {
+      const corpo = block.slice(block.indexOf('{') + 1, block.lastIndexOf('}'));
+      const dentro = splitTopLevel(corpo).filter((r) => CRITICO.test(r.slice(0, r.indexOf('{'))));
+      if (dentro.length) saida.push(`${cabeca}{${dentro.join('')}}`);
+    } else if (CRITICO.test(cabeca)) {
+      saida.push(block);
+    }
+  }
+
+  /* Os @keyframes que as regras acima acionam. Sem eles a declaração `animation`
+     fica apontando para um nome que ainda não existe, e o texto da cortina
+     entraria parado — voltando a se mexer só quando a folha completa chegasse,
+     que é exatamente o instante que este bloco existe para não esperar. */
+  const usados = new Set();
+  for (const nome of saida.join('').matchAll(/animation:\s*([\w-]+)/g)) usados.add(nome[1]);
+  if (usados.size) {
+    for (const block of splitTopLevel(sem)) {
+      const cabeca = block.slice(0, block.indexOf('{')).trim();
+      const quadro = cabeca.match(/^@(?:-\w+-)?keyframes\s+([\w-]+)/);
+      if (quadro && usados.has(quadro[1])) saida.push(block);
+    }
+  }
+  return saida.join('\n');
+}
+
 function publicPath(absolute) {
   return path.relative(ROOT, absolute).split(path.sep).join('/');
 }
@@ -206,8 +270,13 @@ function versionCandidate(candidate, entries) {
   return descriptor ? `${versioned}${descriptor[2]}` : versioned;
 }
 
-function syncHtml(source, entries) {
-  return source.replace(HTML_ATTR, (all, attribute, quote, value) => {
+const MARCADOR_CRITICO = /(\/\* css-critico:inicio \*\/)[\s\S]*?(\/\* css-critico:fim \*\/)/;
+
+function syncHtml(source, entries, critico) {
+  const comCritico = critico && MARCADOR_CRITICO.test(source)
+    ? source.replace(MARCADOR_CRITICO, (all, abre, fecha) => `${abre}${critico}${fecha}`)
+    : source;
+  return comCritico.replace(HTML_ATTR, (all, attribute, quote, value) => {
     const updated = attribute.toLowerCase().includes('srcset')
       ? value.split(',').map((part) => versionCandidate(part.trim(), entries)).join(', ')
       : versionCandidate(value, entries);
@@ -233,8 +302,19 @@ async function computeBuild() {
   const rawEntries = await rawAssetEntries(htmlSources, sourceContents);
   const outputs = await compileOutputs(rawEntries, sourceContents);
   const entries = new Map([...rawEntries, ...outputEntries(outputs)]);
+
+  const criticoBruto = extractCritical(sourceContents.get('assets/css/style.css'));
+  if (!criticoBruto.includes('.preloader')) {
+    throw new Error('CSS crítico saiu sem as regras da cortina — o extrator perdeu o alvo');
+  }
+  const critico = (await transform(criticoBruto, {
+    charset: 'utf8', legalComments: 'none', loader: 'css', minify: true, sourcemap: false,
+  })).code.trim();
+
   const htmlOutputs = new Map();
-  for (const [htmlName, source] of htmlSources) htmlOutputs.set(htmlName, Buffer.from(syncHtml(source, entries)));
+  for (const [htmlName, source] of htmlSources) {
+    htmlOutputs.set(htmlName, Buffer.from(syncHtml(source, entries, critico)));
+  }
   return { entries, htmlOutputs, manifest: manifestBytes(entries), outputs };
 }
 
