@@ -44,9 +44,9 @@
       "source": "assets/js/brain-particles.js"
     },
     "assets/build/config.min.js": {
-      "bytes": 2610,
+      "bytes": 2617,
       "emitted": "assets/build/config.min.js",
-      "sha256": "fc7fb8c49ad7",
+      "sha256": "bdf44872e87b",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
@@ -62,9 +62,9 @@
       "source": "assets/js/main.js"
     },
     "assets/build/site.min.css": {
-      "bytes": 51146,
+      "bytes": 51253,
       "emitted": "assets/build/site.min.css",
-      "sha256": "7fdb95102925",
+      "sha256": "c0c8cd0b5d04",
       "source": "assets/css/style.css"
     },
     "assets/build/tracking.min.js": {

@@ -815,9 +815,18 @@ body.esta-carregando { overflow: hidden; }
   .contact-channel strong { font-size: 1.05rem; }
 
   /* Marca inteira em cima, e as tres listas em duas colunas: uma coluna so
-     empurraria o credito para 600px abaixo do CTA. */
-  .footer-inner { grid-template-columns: 1fr 1fr; }
+     empurraria o credito para 600px abaixo do CTA.
+
+     Tudo centralizado nesta faixa. Alinhado a esquerda, a coluna estreita
+     deixava uma margem direita irregular a cada titulo de tamanho diferente;
+     centrado, o rodape fecha a pagina como um bloco so. `justify-items` cuida
+     das celulas do grid e `align-items` do conteudo das listas, que sao flex —
+     sem os dois, o texto centraliza mas a caixa continua colada a esquerda. */
+  .footer-inner { grid-template-columns: 1fr 1fr; justify-items: center; text-align: center; }
   .footer-marca { grid-column: 1 / -1; }
+  .footer-col { align-items: center; }
+  /* O botao herda text-align: left do reset de <button>. */
+  .footer-col__botao { text-align: center; }
   .footer-inner > p { grid-column: 1 / -1; }
   .footer { padding-bottom: 5rem; }
   /* Botão flutuante, não barra. Esticado de ponta a ponta ele deixava de ser um
