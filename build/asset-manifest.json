@@ -44,9 +44,9 @@
       "source": "assets/js/brain-particles.js"
     },
     "assets/build/config.min.js": {
-      "bytes": 2617,
+      "bytes": 2619,
       "emitted": "assets/build/config.min.js",
-      "sha256": "bdf44872e87b",
+      "sha256": "5f8e91d57b3d",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
