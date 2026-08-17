@@ -46,7 +46,7 @@
     "assets/build/config.min.js": {
       "bytes": 2619,
       "emitted": "assets/build/config.min.js",
-      "sha256": "5f8e91d57b3d",
+      "sha256": "9f7028e6d5e0",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
