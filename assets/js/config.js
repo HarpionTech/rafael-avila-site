@@ -2,7 +2,10 @@
 window.CONFIG = {
   whatsapp: {
     numero: '5548991947402',
-    mensagem: 'Olá vim pela pagina e gostaria de marcar uma consulta'
+    /* Fonte única: applyLinks() reescreve o href de todo [data-wa] a partir
+       daqui. O href no HTML é só o fallback de quem chega sem JavaScript, e
+       precisa ser mantido em sincronia com este texto. */
+    mensagem: 'Olá vim pela pagina e gostaria de mais detalhes'
   },
 
   /* Dados exclusivos dos aprimoramentos 3D. Títulos, descrições, capas

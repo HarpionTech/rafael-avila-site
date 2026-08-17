@@ -51,8 +51,9 @@
 
 
   function applyLinks() {
-    /* Sem glifo nos CTAs: "Marcar consulta" nao precisa dizer por qual app —
-       o icone so aparece onde o canal E a informacao (card de contato). */
+    /* Sem glifo nos CTAs de texto: o rotulo ja diz a acao e o app e detalhe.
+       O icone so aparece onde ELE e a informacao: no card de contato, que
+       anuncia o canal, e no botao flutuante, que nao tem texto nenhum. */
     $$('[data-wa]').forEach((element) => {
       element.href = waLink();
       element.target = '_blank';
@@ -133,8 +134,14 @@
     let shown = false;
     let heroVisible = true;
     let contactVisible = false;
+    /* O aviso de cookies mora no MESMO canto e na MESMA camada (--z-floating).
+       Empatados no z-index, vence quem entra depois no DOM — o aviso —, e ele
+       ocupa a largura toda: o flutuante ficava embaixo, visível e inclicável,
+       porque o toque parava no aviso. Enquanto houver decisão pendente o canto
+       é dele; o botão espera a vez. */
+    const avisoNaTela = () => !!$('.consent');
     const render = () => {
-      const shouldShow = !heroVisible && !contactVisible;
+      const shouldShow = !heroVisible && !contactVisible && !avisoNaTela();
       if (shouldShow === shown) return;
       shown = shouldShow;
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -145,13 +152,22 @@
         window.gsap.to(sticky, { opacity: 0, y: 8, duration: .16, ease: 'power2.in', onComplete: () => { sticky.hidden = true; window.gsap.set(sticky, { clearProps: 'opacity,transform' }); } });
       } else sticky.hidden = true;
     };
+    /* Os DOIS observadores precisam redesenhar. Sem o render() aqui, sair da
+       hero atualizava a variável e não acontecia nada: o botão só teria chance
+       de aparecer quando o observador do CONTATO disparasse — ou seja, no fim
+       da página —, e na prática ele nunca aparecia. */
     new IntersectionObserver(([entry]) => {
       heroVisible = entry.isIntersecting;
+      render();
       }, { rootMargin: '-76px 0px 0px 0px' }).observe(hero);
     new IntersectionObserver(([entry]) => {
       contactVisible = entry.isIntersecting;
       render();
     }, { threshold: .08 }).observe(contact);
+
+    /* O aviso de cookies entra e sai como filho direto do body. Sem isto, quem
+       decidisse sem rolar mais nada ficaria sem o botão até o próximo scroll. */
+    new MutationObserver(render).observe(document.body, { childList: true });
   }
 
   // Para onde a nuvem se inclina em cada etapa (x, y em -1..1).

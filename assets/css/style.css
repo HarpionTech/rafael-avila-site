@@ -648,8 +648,15 @@ body.esta-carregando { overflow: hidden; }
 /* #7a746b sumia: o rodapé cai justamente no assoalho aceso do cenário, e o
    crédito é a única linha que não tem painel atrás para se apoiar. */
 .footer-inner > p { grid-column: 1 / -1; margin: 0; padding-top: 1.2rem; border-top: 1px solid var(--line-light); color: #a49c91; font-size: .62rem; text-shadow: 0 1px 3px rgba(0,0,0,.65); }
-.sticky-wa { --glass-top: rgba(43,66,49,.96); --glass-bottom: rgba(8,8,10,.92); --glass-border: rgba(83,235,136,.3); --glass-highlight: rgba(112,244,158,.34); position: fixed; right: 1rem; bottom: 1rem; z-index: var(--z-floating); display: inline-flex; min-height: 50px; align-items: center; gap: .65rem; padding: .75rem 1rem; color: var(--white); font-size: .72rem; font-weight: 700; }
+/* Só o ícone, em círculo. Sem texto não há o que alinhar em linha: largura e
+   altura iguais e `place-items: center` bastam, e o padding lateral que existia
+   para dar respiro à palavra viraria um oval. 52px mantém o alvo de toque acima
+   do mínimo de 44px mesmo com o ícone pequeno. */
+.sticky-wa { --glass-top: rgba(43,66,49,.96); --glass-bottom: rgba(8,8,10,.92); --glass-border: rgba(83,235,136,.3); --glass-highlight: rgba(112,244,158,.34); position: fixed; right: 1rem; bottom: 1rem; z-index: var(--z-floating); display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border-radius: 50%; color: var(--white); }
 .sticky-wa svg { width: 1.1rem; height: 1.1rem; fill: var(--whatsapp); }
+/* Maior que o glifo dos cards: aqui o ícone é o botão inteiro, não um adorno ao
+   lado de um rótulo — e é a única coisa que diz o que o botão faz. */
+.sticky-wa__icone { width: 1.65rem; height: 1.65rem; fill: #6ee89a; }
 .sticky-wa[hidden] { display: none; }
 .noscript { padding: 1rem; background: var(--bronze); color: var(--white); font-weight: 700; text-align: center; }
 .noscript a { text-decoration: underline; }
@@ -816,7 +823,7 @@ body.esta-carregando { overflow: hidden; }
   /* Botão flutuante, não barra. Esticado de ponta a ponta ele deixava de ser um
      atalho e virava um rodapé fixo: tapava a linha de baixo de qualquer seção e
      competia com o CTA da própria seção. Compacto no canto, como no desktop. */
-  .sticky-wa { right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); padding: .7rem .95rem; font-size: .66rem; }
+  .sticky-wa { right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
