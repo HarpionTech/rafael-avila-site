@@ -539,6 +539,23 @@
      capa enquanto ela estiver no ar. */
   let girarHeroLivro = null;
 
+  /* Roda `fn` quando o layout ja puder ser medido de verdade.
+     Sem o atributo (a politica, por exemplo) ou com a folha ja aplicada, roda
+     na hora — a espera existe so para a janela em que o conteudo esta fora do
+     layout aguardando a folha adiada. */
+  function quandoLayoutPronto(fn) {
+    const raiz = document.documentElement;
+    const pronto = () => !raiz.hasAttribute('data-css-adiado')
+      || raiz.classList.contains('css-pronto');
+    if (pronto()) return fn();
+    const observador = new MutationObserver(() => {
+      if (!pronto()) return;
+      observador.disconnect();
+      fn();
+    });
+    observador.observe(raiz, { attributes: true, attributeFilter: ['class'] });
+  }
+
   function setupMotion() {
     if (!window.gsap || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const gsap = window.gsap;
@@ -558,6 +575,19 @@
     // elemento não existe mais no markup, e o tween em loop só sobrava avisando
     // no console que não achava o alvo.
     if (!window.ScrollTrigger) return;
+
+    /* Os gatilhos de rolagem só podem nascer com o layout REAL medido.
+       A folha completa é carregada sem bloquear a pintura, e até ela chegar o
+       conteúdo fica fora do layout — o corpo inteiro mede 26px, só a cortina.
+       Gatilhos criados nesse instante entendem que todas as seções já passaram
+       do ponto de disparo: disparam de uma vez e, por serem `once`, se destroem.
+       A página abria sem animação nenhuma, e de forma intermitente — quando o
+       CSS ganhava a corrida, tudo funcionava; quando perdia, nada animava.
+       Medido: 24 gatilhos criados, 1 sobrevivente, corpo com 26px.
+
+       A hero fica de fora desta espera de propósito: a timeline dela não usa
+       ScrollTrigger e o preloader depende de `introHero` já existir. */
+    quandoLayoutPronto(() => {
     gsap.registerPlugin(window.ScrollTrigger);
     const ScrollTrigger = window.ScrollTrigger;
     window.ScrollTrigger.config({ ignoreMobileResize: true });
@@ -571,10 +601,17 @@
        A duração encolhe porque no polegar a rolagem é rápida: com .92s o
        conteúdo ainda está chegando quando o olho já passou por ele. */
     const compacto = matchMedia('(max-width: 900px)').matches;
-    const ent = (v) => {
+    const ent = (v, manterX) => {
       if (!compacto) return v;
       const o = Object.assign({}, v);
-      delete o.x;
+      /* `manterX` preserva o deslize lateral nos CARDS, onde ele é a assinatura
+         do movimento — mas com a amplitude refeita para a tela: 120px são 8% de
+         um monitor de 1440 e 31% de um aparelho de 390, o que faria o cartão
+         entrar de fora da viewport. 68px mantém a direção legível sem virar um
+         voo atravessando a tela. A rotação continua fora: num cartão que ocupa
+         a coluna inteira ela joga o canto para além da margem. */
+      if (manterX && o.x) o.x = Math.min(Math.abs(o.x), 68) * (o.x < 0 ? -1 : 1);
+      else delete o.x;
       delete o.rotation;
       const dy = o.y || 24;
       o.y = Math.min(Math.abs(dy), 28) * (dy < 0 ? -1 : 1);
@@ -600,7 +637,7 @@
 
     gsap.from('.about-intro .kicker, .about-intro > p', ent({ opacity: 0, x: -44, duration: .55, stagger: .08, ease: 'power3.out', scrollTrigger: { trigger: '.about-section', start: 'top 78%', once: true, fastScrollEnd: true } }));
     gsap.fromTo('.about-portrait', { opacity: 0, scale: 1.08, clipPath: 'inset(10% 14% 8% 4% round 3rem)' }, { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0% round 1.5rem)', duration: 1.05, ease: 'power4.out', clearProps: 'opacity,transform,clipPath', scrollTrigger: { trigger: '.about-grid', start: 'top 74%', once: true, fastScrollEnd: true } });
-    gsap.from('[data-about-card]', ent({ opacity: 0, x: 120, y: 50, rotation: 3, scale: .96, duration: .92, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.about-grid', start: 'top 68%', once: true, fastScrollEnd: true } }));
+    gsap.from('[data-about-card]', ent({ opacity: 0, x: 120, y: 50, rotation: 3, scale: .96, duration: .92, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.about-grid', start: 'top 68%', once: true, fastScrollEnd: true } }, true));
     gsap.from('.about-stats > div', { opacity: 0, y: 18, duration: .42, stagger: .08, ease: 'power3.out', scrollTrigger: { trigger: '[data-about-card]', start: 'top 78%', once: true, fastScrollEnd: true } });
 
     gsap.from('.method-visual', ent({ opacity: 0, x: -110, rotation: -3, scale: .92, duration: .9, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.method-layout', start: 'top 76%', once: true, fastScrollEnd: true } }));
@@ -656,8 +693,9 @@
     }
 
     gsap.from('.contact-copy .kicker, .contact-copy > p:last-child', ent({ opacity: 0, x: -54, duration: .55, stagger: .1, ease: 'power3.out', scrollTrigger: { trigger: '.contact-section', start: 'top 76%', once: true, fastScrollEnd: true } }));
-    gsap.from('.contact-channel', ent({ opacity: 0, x: 120, y: 34, rotation: 2, duration: .7, stagger: .12, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.contact-channels', start: 'top 84%', once: true, fastScrollEnd: true } }));
+    gsap.from('.contact-channel', ent({ opacity: 0, x: 120, y: 34, rotation: 2, duration: .7, stagger: .12, ease: 'power4.out', clearProps: 'opacity,transform', scrollTrigger: { trigger: '.contact-channels', start: 'top 84%', once: true, fastScrollEnd: true } }, true));
     addEventListener('load', () => window.ScrollTrigger.refresh(), { once: true });
+    });
   }
 
   /* Preloader: a cortina segura a pagina ate o objeto da hero existir e sobe.
