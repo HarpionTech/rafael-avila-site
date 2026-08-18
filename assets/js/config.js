@@ -98,7 +98,14 @@ window.CONFIG = {
        nada de forma visível: mede para o conjunto errado e só aparece semanas
        depois. Se algum dia precisar conferir, é o número que a Meta mostra
        depois de "Identificação", nunca o nome em azul acima dele. */
-    metaPixelId: '2509060272852471'
+    metaPixelId: '2509060272852471',
+    /* Etiqueta do Google Ads. GA4 e Ads são o MESMO gtag.js com dois `config`:
+       a base sobe uma vez e cada produto entra pela sua categoria de
+       consentimento — GA4 em "estatísticas", Ads em "marketing". Colar o
+       snippet que o Google Ads oferece criaria uma segunda etiqueta na página,
+       contra o aviso da própria Google, e ela carregaria antes da decisão sobre
+       cookies. */
+    googleAdsId: 'AW-18395606201'
   },
 
   consentimento: {

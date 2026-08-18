@@ -24,16 +24,18 @@
      silêncio honesto — nada carrega — em vez de um sucesso aparente. */
   const FORMATO_GA4 = /^G-[A-Z0-9]{6,12}$/;
   const FORMATO_META = /^\d{15,16}$/;
+  const FORMATO_ADS = /^AW-\d{9,12}$/;
 
   const limpo = (valor) => String(valor == null ? '' : valor).trim();
   const ga4Id = FORMATO_GA4.test(limpo(cfg.ga4Id)) ? limpo(cfg.ga4Id) : '';
   const metaId = FORMATO_META.test(limpo(cfg.metaPixelId)) ? limpo(cfg.metaPixelId) : '';
+  const adsId = FORMATO_ADS.test(limpo(cfg.googleAdsId)) ? limpo(cfg.googleAdsId) : '';
 
   const Consentimento = window.Consentimento;
   if (!Consentimento) return;                 // sem árbitro, não se mede nada
 
   const permitido = (categoria) => Consentimento.permitido(categoria);
-  const estado = { ga4: false, meta: false };
+  const estado = { gtag: false, ga4: false, ads: false, meta: false };
 
   /* `async` porque medição nunca deve atrasar a página, e sem `defer` porque a
      ordem entre os dois provedores é irrelevante — eles não se conhecem. */
@@ -63,35 +65,62 @@
     });
   }
 
-  // ---------------------------------------------------------------- GA4 ----
+  // ------------------------------------------------- base compartilhada ----
 
-  function ligaGA4() {
-    if (estado.ga4 || !ga4Id) return;         // idempotente: reentrar não duplica
-    estado.ga4 = true;
+  /* GA4 e Google Ads são o MESMO script (gtag.js) com dois `config` diferentes,
+     e a própria Google avisa: "não adicione mais de uma etiqueta Google por
+     página". Duas cópias competem pelo mesmo dataLayer e duplicam evento.
+
+     Por isso a base sobe uma vez só, e cada produto entra pela sua categoria:
+     GA4 com "estatísticas", Ads com "marketing". Aceitar só uma delas carrega o
+     script e configura só o produto correspondente. */
+  function preparaGtag(idParaUrl) {
+    if (estado.gtag) return;
+    estado.gtag = true;
 
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function gtag() { window.dataLayer.push(arguments); };
 
-    /* Consent Mode declarado no primeiro comando, antes de qualquer medida.
-       `analytics_storage` já entra concedido porque este bloco só roda com
-       "estatísticas" aceito; a parte de anúncio depende da OUTRA categoria, e
-       por isso é consultada separada em vez de herdar o mesmo "sim". */
+    /* Consent Mode no primeiro comando, antes de qualquer medida. As duas
+       categorias são lidas separadamente porque são decisões separadas: quem
+       aceita estatísticas e recusa marketing tem análise sem chave de anúncio. */
+    const analise = permitido('estatisticas') ? 'granted' : 'denied';
     const anuncio = permitido('marketing') ? 'granted' : 'denied';
     window.gtag('consent', 'default', {
-      analytics_storage: 'granted',
+      analytics_storage: analise,
       ad_storage: anuncio,
       ad_user_data: anuncio,
       ad_personalization: anuncio
     });
 
     window.gtag('js', new Date());
+    carregaScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(idParaUrl)}`);
+  }
+
+  // ---------------------------------------------------------------- GA4 ----
+
+  function ligaGA4() {
+    if (estado.ga4 || !ga4Id) return;         // idempotente: reentrar não duplica
+    estado.ga4 = true;
+    preparaGtag(ga4Id);
+
     /* `send_page_view: false` e o page_view logo abaixo, à mão: com o envio
        automático, a visita seria contada no `config` e de novo em qualquer
        reconfiguração — e a diferença só apareceria como tráfego inflado. */
     window.gtag('config', ga4Id, { send_page_view: false });
     window.gtag('event', 'page_view');
+  }
 
-    carregaScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga4Id)}`);
+  // ---------------------------------------------------------- Google Ads ---
+
+  /* Categoria "marketing", não "estatísticas": a etiqueta do Ads existe para
+     medir e atribuir anúncio, e é isso que a categoria de marketing descreve
+     para o visitante no aviso de cookies. */
+  function ligaAds() {
+    if (estado.ads || !adsId) return;
+    estado.ads = true;
+    preparaGtag(adsId);
+    window.gtag('config', adsId);
   }
 
   // --------------------------------------------------------------- Meta ----
@@ -174,21 +203,27 @@
      para quem volta com a escolha já guardada. */
   Consentimento.ao('estatisticas', ligaGA4);
   Consentimento.ao('marketing', ligaMeta);
+  Consentimento.ao('marketing', ligaAds);
 
+  /* As condições olham `estado.gtag`, não `estado.ga4`: desde que o Google Ads
+     existe, a base do gtag pode ter subido por marketing, com o GA4 desligado.
+     Checar o GA4 aqui deixaria a revogação muda justamente para quem aceitou só
+     anúncio — o caso em que ela mais importa. */
   Consentimento.aoMudar(() => {
     if (!permitido('estatisticas')) {
-      if (estado.ga4) window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      if (estado.gtag) window.gtag('consent', 'update', { analytics_storage: 'denied' });
       apagaCookies('_ga');
     }
     if (!permitido('marketing')) {
-      if (estado.ga4) {
+      if (estado.gtag) {
         window.gtag('consent', 'update', {
           ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied'
         });
       }
       if (estado.meta) window.fbq('consent', 'revoke');
       apagaCookies('_fb');
-    } else if (estado.ga4) {
+      apagaCookies('_gcl');           // identificador de clique do Google Ads
+    } else if (estado.gtag) {
       window.gtag('consent', 'update', {
         ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted'
       });
@@ -198,7 +233,7 @@
   /* Superfície mínima para conferência: diz o que está ligado e permite disparar
      um evento à mão. Não expõe os IDs nem o módulo de consentimento. */
   window.SiteTracking = {
-    estado: () => ({ ga4: estado.ga4, meta: estado.meta }),
+    estado: () => ({ ga4: estado.ga4, ads: estado.ads, meta: estado.meta }),
     evento: (nome, dados) => dispara(String(nome), dados || {})
   };
 })();

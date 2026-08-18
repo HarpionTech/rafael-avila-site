@@ -44,9 +44,9 @@
       "source": "assets/js/brain-particles.js"
     },
     "assets/build/config.min.js": {
-      "bytes": 2619,
+      "bytes": 2648,
       "emitted": "assets/build/config.min.js",
-      "sha256": "9f7028e6d5e0",
+      "sha256": "e9c3eb3eb2e1",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
@@ -68,9 +68,9 @@
       "source": "assets/css/style.css"
     },
     "assets/build/tracking.min.js": {
-      "bytes": 2684,
+      "bytes": 2941,
       "emitted": "assets/build/tracking.min.js",
-      "sha256": "ed935e2ba5cd",
+      "sha256": "d9b8fda82e34",
       "source": "assets/js/tracking.js"
     },
     "assets/capa do livro fisico.jpeg": {
