@@ -62,9 +62,9 @@
       "source": "assets/js/main.js"
     },
     "assets/build/site.min.css": {
-      "bytes": 51253,
+      "bytes": 51565,
       "emitted": "assets/build/site.min.css",
-      "sha256": "c0c8cd0b5d04",
+      "sha256": "2b82830ca992",
       "source": "assets/css/style.css"
     },
     "assets/build/tracking.min.js": {

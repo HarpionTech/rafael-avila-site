@@ -9,7 +9,11 @@
   --ink-soft: #b8b1a4;
   --dark: #08080a;
   --dark-soft: #101012;
-  --muted: #8b857b;
+  /* Texto de corpo sobre a FOTO, nao sobre o preto. O #8b857b anterior foi
+     calibrado contra --paper (da 5.4:1 la), mas as secoes nao tem fundo proprio:
+     a sala aparece atraves delas, e contra a estante acesa o mesmo cinza media
+     2.0:1 — reprovado. Subiu para o tom que aguenta o pior ponto da foto. */
+  --muted: #cdc6b8;
   --bronze: #c8a96a;
   --bronze-light: #e2c88f;
   --line: rgba(226, 200, 143, .16);
@@ -64,6 +68,16 @@ button, a { touch-action: manipulation; }
   text-transform: uppercase;
 }
 .section-intro > p:last-child, .section-intro-split > p { margin: 0; color: var(--muted); }
+/* Texto de corpo que cai sobre a foto ganha o mesmo contorno do credito do
+   rodape: a sombra segue o contorno do glifo, entao a letra destaca sem que
+   apareca faixa ou caixa atras do paragrafo. A hero fica FORA — la o veu
+   proprio da secao ja resolve e o texto e outro. */
+.section-intro > p:last-child, .section-intro-split > p,
+.method-steps p, .method-approach p, .method-closing, .life-areas span,
+.showcase__card li, .showcase__card > p, .about-stats span, .about-glass > p,
+.contact-copy > p:last-child, .book-callout li, .book-callout > p, .brain-insight p {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+}
 /* A máscara existe para o `overflow: hidden` cortar a palavra enquanto ela sobe
    na animação de entrada. O recorte se dá na caixa de padding, então é o padding
    que define quanto de tinta sobrevive — e ele precisa caber o CARÁTER MAIS ALTO
@@ -398,7 +412,7 @@ body.esta-carregando { overflow: hidden; }
 .brain-insight::before { content: ""; position: absolute; top: 0; left: 1.15rem; width: 34%; height: 1px; background: linear-gradient(90deg, var(--bronze-light), transparent); box-shadow: 0 0 14px rgba(226,200,143,.36); }
 .brain-insight small { display: block; margin-bottom: .55rem; color: var(--bronze-light); font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .brain-insight strong { display: block; font-family: var(--serif); font-size: 1.15rem; font-weight: 500; line-height: 1.2; }
-.brain-insight p { margin: .55rem 0 0; color: #bdb6ab; font-size: .78rem; line-height: 1.5; }
+.brain-insight p { margin: .55rem 0 0; color: var(--muted); font-size: .78rem; line-height: 1.5; }
 
 /* About */
 .about-section { overflow: hidden; background: transparent; }
@@ -413,7 +427,7 @@ body.esta-carregando { overflow: hidden; }
 .about-glass { position: relative; z-index: 3; padding: clamp(1.5rem, 3vw, 2.5rem); border-radius: 1.4rem; background: linear-gradient(160deg, rgba(255,255,255,.055), rgba(255,255,255,.018)); border: 1px solid rgba(226,200,143,.18); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 32px 70px rgba(25,34,26,.18); }
 .about-glass h3 { margin: 0; font-family: var(--serif); font-size: clamp(1.9rem, 3vw, 2.9rem); font-weight: 500; letter-spacing: -.03em; line-height: 1; }
 .about-role { margin: .8rem 0 1.5rem; color: var(--bronze); font-size: .68rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
-.about-glass > p:not(.about-role) { color: var(--ink-soft); }
+.about-glass > p:not(.about-role) { color: var(--muted); }
 .about-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 1.8rem; border-block: 1px solid var(--line); }
 .about-stats > div { padding: 1rem .8rem; border-right: 1px solid var(--line); }
 .about-stats > div:first-child { padding-left: 0; }
@@ -435,7 +449,7 @@ body.esta-carregando { overflow: hidden; }
    seção entre as áreas da vida e as etapas. Em duas colunas para não virar um
    bloco corrido de texto no meio de uma página que é toda visual. */
 .method-approach { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: clamp(1.5rem, 4vw, 3.5rem); margin: clamp(3rem, 6vw, 5rem) 0 clamp(2.5rem, 5vw, 4rem); padding-top: clamp(2rem, 4vw, 3rem); border-top: 1px solid var(--line); }
-.method-approach p { margin: 0; color: var(--ink-soft); font-size: 1.02rem; }
+.method-approach p { margin: 0; color: var(--muted); font-size: 1.02rem; }
 .method-approach p:first-child::first-line { color: var(--white); }
 .method-invite { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: center; justify-content: space-between; margin-top: clamp(2.5rem, 5vw, 4rem); padding: clamp(1.5rem, 3vw, 2.2rem); border: 1px solid var(--line); border-radius: 1.2rem; }
 .method-invite p { max-width: 640px; margin: 0; font-family: var(--serif); font-size: clamp(1.15rem, 1.9vw, 1.5rem); font-weight: 400; line-height: 1.3; }
@@ -449,8 +463,6 @@ body.esta-carregando { overflow: hidden; }
 
 /* Publications */
 .books-section { overflow: hidden; background: transparent; color: var(--white); }
-.section-intro-dark h2 { color: var(--white); }
-.section-intro-dark > p { color: #a8a196; }
 .publications-list { display: grid; gap: clamp(5rem, 10vw, 10rem); }
 .publication { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, .78fr); gap: clamp(4rem, 8vw, 7rem); align-items: center; min-height: 600px; }
 .publication-reverse { grid-template-columns: minmax(380px, .78fr) minmax(0, 1fr); }
@@ -507,7 +519,7 @@ body.esta-carregando { overflow: hidden; }
 .book-callout--reveal { opacity: 0; transform: translateY(18px) scale(.97); pointer-events: none; transition: opacity .6s var(--ease-out), transform .7s var(--ease-out); }
 .book-callout--reveal.is-revealed { opacity: 1; transform: none; pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) { .book-callout--reveal { transition: none; } }
-.book-gesture { position: absolute; z-index: 3; bottom: -2.8rem; left: 50%; display: inline-flex; align-items: center; gap: .45rem; color: #857f75; font-size: .58rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; transform: translateX(-50%); }
+.book-gesture { position: absolute; z-index: 3; bottom: -2.8rem; left: 50%; display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .58rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; transform: translateX(-50%); text-shadow: 0 1px 3px rgba(0,0,0,.7); }
 .book-gesture span { color: var(--bronze-light); font-size: .9rem; }
 .book-connector { position: absolute; z-index: 1; top: 50%; right: -7.5rem; width: 10rem; height: 1px; background: linear-gradient(90deg, rgba(226,200,143,.85), rgba(226,200,143,.18)); }
 .book-connector::after { content: ""; position: absolute; top: -4px; right: 0; width: 8px; height: 8px; border-top: 1px solid var(--bronze-light); border-right: 1px solid var(--bronze-light); transform: rotate(45deg); }
@@ -517,9 +529,9 @@ body.esta-carregando { overflow: hidden; }
 .publication-reverse .book-connector i { right: 0; left: auto; }
 .book-callout { position: relative; z-index: 3; padding: clamp(1.5rem, 3.5vw, 3rem); border-radius: 1.5rem; color: var(--white); }
 .book-callout h3 { margin: 0; font-family: var(--serif); font-size: clamp(1.6rem, 2.4vw, 2.4rem); font-weight: 500; letter-spacing: -.025em; line-height: 1.05; overflow-wrap: break-word; hyphens: auto; }
-.book-callout > p:not(.glass-label) { color: #bdb6ab; }
+.book-callout > p:not(.glass-label) { color: var(--muted); }
 .book-callout ul { margin: 1.4rem 0; padding: 1rem 0 0; border-top: 1px solid var(--line-light); list-style: none; }
-.book-callout li { position: relative; margin: .55rem 0; padding-left: 1.1rem; color: #a8a196; font-size: .84rem; }
+.book-callout li { position: relative; margin: .55rem 0; padding-left: 1.1rem; color: var(--muted); font-size: .84rem; }
 .book-callout li::before { content: "—"; position: absolute; left: 0; color: var(--bronze-light); }
 .book-offer { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--line-light); }
 .book-offer strong { font-family: var(--serif); font-size: 1.5rem; font-weight: 500; }
@@ -584,7 +596,7 @@ body.esta-carregando { overflow: hidden; }
    a própria iluminação; não precisa de um segundo foco por cima. */
 .contact-layout { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, .72fr); gap: clamp(3rem, 9vw, 9rem); align-items: end; }
 .contact-copy h2 { max-width: 800px; color: var(--white); }
-.contact-copy > p:last-child { max-width: 680px; margin: 1.5rem 0 0; color: #a8a196; }
+.contact-copy > p:last-child { max-width: 680px; margin: 1.5rem 0 0; color: var(--muted); }
 .contact-channels { display: grid; gap: .8rem; }
 .contact-channel { display: grid; grid-template-columns: 48px 1fr; gap: 1rem; align-items: center; min-height: 88px; padding: 1rem; border-radius: 1.25rem; color: var(--white); }
 .contact-icon { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; background: rgba(255,255,255,.06); }
@@ -641,13 +653,13 @@ body.esta-carregando { overflow: hidden; }
    sem ter clicado não deveria ter de subir para achar o botão. */
 .footer-marca .liquid-button { margin-top: 1.4rem; }
 
-.footer-col { display: flex; flex-direction: column; gap: .7rem; color: #a8a196; font-size: .68rem; }
+.footer-col { display: flex; flex-direction: column; gap: .7rem; color: var(--ink-soft); font-size: .68rem; }
 .footer-col h2 { margin: 0 0 .3rem; color: var(--white); font-family: var(--sans); font-size: .58rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
 .footer-col a { color: inherit; transition: color .2s ease; }
 .footer-col a:hover { color: var(--bronze-light); }
 /* #7a746b sumia: o rodapé cai justamente no assoalho aceso do cenário, e o
    crédito é a única linha que não tem painel atrás para se apoiar. */
-.footer-inner > p { grid-column: 1 / -1; margin: 0; padding-top: 1.2rem; border-top: 1px solid var(--line-light); color: #a49c91; font-size: .62rem; text-shadow: 0 1px 3px rgba(0,0,0,.65); }
+.footer-inner > p { grid-column: 1 / -1; margin: 0; padding-top: 1.2rem; border-top: 1px solid var(--line-light); color: var(--ink-soft); font-size: .62rem; text-shadow: 0 1px 3px rgba(0,0,0,.65); }
 /* Só o ícone, em círculo. Sem texto não há o que alinhar em linha: largura e
    altura iguais e `place-items: center` bastam, e o padding lateral que existia
    para dar respiro à palavra viraria um oval. 52px mantém o alvo de toque acima
@@ -856,7 +868,7 @@ body.esta-carregando { overflow: hidden; }
 .life-areas li:last-child .life-areas__regua { display: none; }
 .life-areas strong { color: var(--white); font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .life-areas span { color: var(--muted); font-size: .92rem; }
-.method-closing { margin: 0; color: #b6afa4; font-size: .95rem; }
+.method-closing { margin: 0; color: var(--muted); font-size: .95rem; }
 .method-steps--row { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(1.2rem, 3vw, 2.4rem); margin-top: clamp(3rem, 6vw, 5rem); padding: 0; list-style: none; }
 
 /* Vitrine giratória das publicações.
@@ -949,7 +961,7 @@ body.esta-carregando { overflow: hidden; }
 @media (max-width: 520px) { .book-offer--duplo { grid-template-columns: 1fr; } }
 
 .showcase__card h3 { margin: 0 0 .8rem; font-family: var(--serif); font-size: clamp(1.3rem, 2.2vw, 1.75rem); font-weight: 500; line-height: 1.15; }
-.showcase__card > p { margin: 0 0 1.1rem; color: #bdb6ab; font-size: .95rem; }
+.showcase__card > p { margin: 0 0 1.1rem; color: var(--muted); font-size: .95rem; }
 .showcase__card ul { display: grid; gap: .5rem; margin: 0 0 1.5rem; padding: 0; list-style: none; }
 .showcase__card li { position: relative; padding-left: 1.1rem; color: var(--muted); font-size: .86rem; }
 .showcase__card li::before { content: "—"; position: absolute; left: 0; color: var(--bronze); }
@@ -1047,7 +1059,7 @@ body.esta-carregando { overflow: hidden; }
 .showcase__trilha button:hover span { background: rgba(226,200,143,.5); }
 .showcase__trilha button.is-active span { height: 40px; background: var(--bronze-light); }
 
-.showcase__hint { flex-basis: 100%; margin: 0; color: #8b857b; font-size: .58rem; letter-spacing: .16em; text-align: center; text-transform: uppercase; }
+.showcase__hint { flex-basis: 100%; margin: 0; color: var(--muted); font-size: .58rem; letter-spacing: .16em; text-align: center; text-transform: uppercase; }
 
 @media (max-width: 900px) {
   .showcase { grid-template-columns: 1fr; }
