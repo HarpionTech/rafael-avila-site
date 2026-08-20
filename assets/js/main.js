@@ -713,10 +713,10 @@
     const base = $('.preloader__metade--base', cortina);
     const gate = window.PreloaderGate;
 
-    /* A coreografia original pode esperar o livro por ate 7 s e ainda precisa
-       de tempo para a luz cortar a marca e as metades abrirem. O watchdog
-       continua garantindo que uma falha nunca prenda a pagina. */
-    gate?.takeOver(9500);
+    /* Rede de seguranca, nao parte da coreografia: 900 ms de piso mais 1,73 s de
+       timeline fecham em ~2,6 s, entao 4 s cobrem qualquer atraso de execucao
+       sem que uma falha consiga prender a pagina. */
+    gate?.takeOver(4000);
 
     document.body.classList.add('esta-carregando');
     scrollTo(0, 0);
@@ -778,17 +778,19 @@
       return;
     }
 
-    /* Restaura o ritmo aprovado: o visitante tem tempo de ler "Bem-vindo",
-       a luz nasce no centro e somente então a cortina abre. O livro pronto
-       evita revelar a hero ainda incompleta; piso e teto mantêm a duração
-       previsível sem risco de travamento. */
-    const piso = new Promise((resolve) => setTimeout(resolve, 2500));
-    const objeto = new Promise((resolve) => {
-      if (!canvas || canvas.classList.contains('is-ready')) { resolve(); return; }
-      canvas.addEventListener('livro:pronto', resolve, { once: true });
-    });
-    const teto = new Promise((resolve) => setTimeout(resolve, 7000));
-    Promise.all([piso, Promise.race([objeto, teto])]).then(sair);
+    /* A cortina deixa de esperar o livro 3D.
+
+       Ela esperava o WebGL montar o objeto da hero para nao revelar a cena
+       incompleta. O preco, medido em celular: 6 a 9 segundos ate a primeira
+       palavra sobre terapia — e o livro nem esta na primeira dobra, entra
+       depois dos botoes. Guardava-se o acabamento de um objeto secundario as
+       custas do unico momento em que a pagina tem a atencao de quem chegou.
+
+       O que sobra e a coreografia inteira, so sem tempo morto: piso curto para
+       "Bem-vindo" ser lido, a luz corta, as metades abrem (1,73 s de timeline).
+       O livro termina de montar por baixo e aparece quando ficar pronto. */
+    const piso = new Promise((resolve) => setTimeout(resolve, 900));
+    piso.then(sair);
   }
 
   /* Objeto da hero: o livro impresso, no mesmo renderizador da vitrine.
@@ -1002,8 +1004,13 @@
       </svg>
       <div class="consent__corpo">
         ${cfg.titulo ? `<p class="consent__titulo">${esc(cfg.titulo)}</p>` : ''}
+        <!-- O texto inteiro fica no DOM desde o inicio: quem usa leitor de tela
+             ou chega com CSS falho recebe a informacao completa, e "Ver mais" so
+             solta o corte visual. Esconder pelo atributo hidden tiraria o conteudo de
+             quem mais precisa dele. -->
         <p class="consent__texto">${esc(cfg.texto)}${cfg.politica
           ? ` <a href="${esc(cfg.politica)}" target="_blank" rel="noopener">Política de privacidade</a>` : ''}</p>
+        <button class="consent__vermais" type="button" data-consent="expandir" aria-expanded="false">Ver mais</button>
       </div>
       <!-- Aceitar e recusar ficam lado a lado, na mesma tela e com o mesmo custo
            de um clique. E o desenho que a LGPD pede e o unico que as autoridades
@@ -1023,6 +1030,14 @@
     };
     $$('[data-consent]', caixa).forEach((b) => b.addEventListener('click', () => {
       const acao = b.dataset.consent;
+      /* Expandir nao e decisao: so mostra o texto inteiro e o caminho do meio
+         termo. O card cresce para cima, a partir da borda de baixo. */
+      if (acao === 'expandir') {
+        const aberto = caixa.classList.toggle('is-expandido');
+        b.setAttribute('aria-expanded', String(aberto));
+        b.textContent = aberto ? 'Ver menos' : 'Ver mais';
+        return;
+      }
       // O aviso NÃO some aqui: fica atrás do painel e só sai quando houver
       // decisão. Fechar o painel no X devolve a pessoa ao aviso.
       if (acao === 'personalizar') { abrePainelCookies(some); return; }
@@ -1031,15 +1046,39 @@
     }));
 
     document.body.appendChild(caixa);
-    /* Espera a cortina sair. Aparecer por cima do preloader seria pedir decisão
-       antes de a pessoa ver o que é a página. */
-    const mostra = () => requestAnimationFrame(() => caixa.classList.add('is-visivel'));
+
+    /* O aviso entra DEPOIS da pagina, nunca junto com ela.
+
+       Medido: como barra no pe, ele nascia sobre o botao "Agendar terapia" e o
+       mantinha inacessivel ate haver decisao sobre cookies — 45 s de teste sem
+       nunca liberar. Adiantar a pergunta nao adianta a resposta: quem acabou de
+       chegar ainda nao sabe o que o site e, e decide no automatico.
+
+       Entao a ordem passa a ser: a pessoa ve a oferta e o botao, e so depois o
+       card desliza para dentro. Nada de terceiros carrega nesse intervalo — o
+       modulo de consentimento so libera apos escolha, entao adiar a pergunta
+       nao adia protecao nenhuma. */
+    const ESPERA = 3000;
+    let entrou = false;
+    const mostra = () => {
+      if (entrou) return;
+      entrou = true;
+      removeEventListener('scroll', aoRolar);
+      requestAnimationFrame(() => caixa.classList.add('is-visivel'));
+    };
+    /* Rolar e sinal de que a pessoa passou da primeira tela: ali o aviso ja nao
+       disputa espaco com o CTA, e segurar a pergunta deixaria de fazer sentido. */
+    const aoRolar = () => { if (scrollY > 80) mostra(); };
+    const agenda = () => {
+      addEventListener('scroll', aoRolar, { passive: true });
+      setTimeout(mostra, ESPERA);
+    };
     if ($('[data-preloader]')) {
       const espia = new MutationObserver(() => {
-        if (!$('[data-preloader]')) { espia.disconnect(); mostra(); }
+        if (!$('[data-preloader]')) { espia.disconnect(); agenda(); }
       });
       espia.observe(document.body, { childList: true });
-    } else mostra();
+    } else agenda();
   }
 
   function init() {

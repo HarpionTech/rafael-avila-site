@@ -56,15 +56,15 @@
       "source": "assets/fontes/fontes.css"
     },
     "assets/build/main.min.js": {
-      "bytes": 23657,
+      "bytes": 24170,
       "emitted": "assets/build/main.min.js",
-      "sha256": "2418c5582598",
+      "sha256": "28a5a0d84d9c",
       "source": "assets/js/main.js"
     },
     "assets/build/site.min.css": {
-      "bytes": 51565,
+      "bytes": 51996,
       "emitted": "assets/build/site.min.css",
-      "sha256": "2b82830ca992",
+      "sha256": "6cea28b03e47",
       "source": "assets/css/style.css"
     },
     "assets/build/tracking.min.js": {

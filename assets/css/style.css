@@ -1164,50 +1164,100 @@ body.esta-carregando { overflow: hidden; }
    para conseguir ler, que é justamente o consentimento que a lei não reconhece.
    Por isso também os dois botões têm o mesmo peso e tamanho: recusar precisa
    custar o mesmo clique que aceitar. */
+/* Card na lateral, nao barra atravessada no pe da tela.
+
+   A barra ocupava a largura inteira e nascia por cima do CTA da primeira tela:
+   medido em iPhone, o botao "Agendar terapia" ficava inacessivel enquanto nao
+   houvesse decisao sobre cookies — 45 s de teste sem nunca liberar. Um card
+   ancorado num canto pede a mesma decisao sem tomar a tela nem tapar a oferta.
+
+   Fica a ESQUERDA porque o botao flutuante do WhatsApp mora no canto direito
+   (.sticky-wa, right: 1rem). Os dois no mesmo canto se cobririam. */
 .consent {
   position: fixed;
   z-index: var(--z-floating);
+  /* Medido em cada tamanho, e o lugar muda porque o CTA muda de lugar:
+     no desktop os botoes da hero ficam a esquerda (x 90-417), entao o card vai
+     para a direita; no celular eles ocupam a largura toda no meio da tela
+     (y 426-478), e o unico vao livre e em cima — ver a media query no fim.
+     Fica acima do botao flutuante do WhatsApp, que mora em bottom: 1rem. */
+  left: auto;
   right: 1rem;
   bottom: 1rem;
-  left: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem clamp(1rem, 3vw, 2.5rem);
-  align-items: center;
-  justify-content: center;
-  max-width: 1100px;
-  margin-inline: auto;
-  padding: clamp(1rem, 2vw, 1.3rem) clamp(1.1rem, 3vw, 1.8rem);
+  /* Grade em vez de coluna: o icone divide a primeira linha com o titulo em vez
+     de ocupar uma linha inteira. Sao 20px de altura economizados num card cujo
+     orcamento e o vao livre embaixo da hero. */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .5rem .55rem;
+  align-items: start;
+  width: min(330px, calc(100vw - 2rem));
+  padding: .85rem .95rem;
   border: 1px solid rgba(226,200,143,.2);
   border-radius: 1.1rem;
   background: linear-gradient(160deg, rgba(18,18,20,.94), rgba(10,10,12,.92));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 24px 60px -24px rgba(0,0,0,.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  /* Entra deslizando de baixo. `visibility` junto da opacidade para o banner não
-     capturar clique enquanto está invisível. */
+  /* Entra deslizando pela borda esquerda ate ficar inteiro na tela. Sai de fora
+     da area visivel (a propria largura mais a folga da margem), entao nao ha
+     instante em que apareca cortado ou meio transparente por cima do conteudo.
+     `visibility` acompanha a opacidade para o card nao capturar clique enquanto
+     ainda esta fora. */
   visibility: hidden;
   opacity: 0;
-  transform: translateY(120%);
-  transition: transform .5s var(--ease-out), opacity .4s ease, visibility .4s;
+  transform: translateX(calc(100% + 1.5rem));
+  transition: transform .62s var(--ease-out), opacity .45s ease, visibility .62s;
 }
 .consent.is-visivel { visibility: visible; opacity: 1; transform: none; }
 /* O ícone é o que faz a caixa ser reconhecida como aviso de cookie antes de
    qualquer leitura — a pessoa identifica o padrão e decide sem parar para ler. */
-.consent__icone { flex: none; width: 26px; height: 26px; color: var(--bronze-light); fill: currentColor; }
-.consent__corpo { flex: 1 1 400px; }
-.consent__titulo { margin: 0 0 .25rem; color: var(--white); font-size: .74rem; font-weight: 700; letter-spacing: .06em; }
-.consent__texto { margin: 0; color: #b9b2a7; font-size: .78rem; line-height: 1.5; }
+.consent__icone { grid-column: 1; grid-row: 1; width: 19px; height: 19px; margin-top: .05rem; color: var(--bronze-light); fill: currentColor; }
+.consent__corpo { grid-column: 2; grid-row: 1; min-width: 0; }
+.consent__titulo { margin: 0 0 .2rem; color: var(--white); font-size: .72rem; font-weight: 700; letter-spacing: .06em; }
+/* Cortado em duas linhas ate alguem pedir "Ver mais". O texto inteiro esta no
+   DOM — isto e corte visual, nao remocao de conteudo. */
+.consent__texto {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: #b9b2a7;
+  font-size: .74rem;
+  line-height: 1.45;
+}
+.consent.is-expandido .consent__texto { -webkit-line-clamp: unset; overflow: visible; }
+/* "Ver mais" e link discreto, nao botao: competir com Aceitar/Recusar por
+   atencao transformaria tres pecas de mesmo peso numa fileira ilegivel. */
+.consent__vermais {
+  margin: .3rem 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--bronze-light);
+  font-size: .7rem;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  cursor: pointer;
+}
 .consent__texto a { color: var(--bronze-light); text-decoration: underline; text-underline-offset: .2em; }
-.consent__acoes { display: flex; flex: none; gap: .6rem; align-items: center; }
+.consent__acoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
 /* Os dois botões têm a MESMA área de toque: aceitar e recusar custam um clique
    cada. A hierarquia vem da cor, não do tamanho — recusa menor ou mais estreita
    é o truque que as autoridades europeias tratam como consentimento inválido. */
-.consent__acoes .liquid-button { min-width: 140px; min-height: 48px; font-size: .74rem; }
+/* Dividem a largura do card em partes iguais: mesma area de toque para aceitar
+   e recusar, que e o que a LGPD pede. O minimo de 44px de altura e o alvo de
+   toque confortavel — encolher aqui para o card caber seria economizar no lugar
+   errado. */
+.consent__acoes .liquid-button { flex: 1 1 0; min-width: 0; min-height: 42px; font-size: .7rem; }
 /* "Personalizar" como texto e não como terceiro botão cheio: três peças de mesmo
    peso viram uma fileira sem hierarquia, e nenhuma das três é lida. Aqui ele é o
    caminho do meio-termo, não a única saída de quem não quer aceitar. */
-.consent__link { padding: .5rem .2rem; background: none; border: 0; color: #b9b2a7; font-size: .72rem; text-decoration: underline; text-underline-offset: .25em; cursor: pointer; }
+/* Em linha propria, abaixo dos dois botoes: no card nao ha largura para tres
+   pecas lado a lado sem espremer as duas que importam. */
+.consent__link { order: 1; display: none; width: 100%; text-align: center; padding: .4rem .2rem; background: none; border: 0; color: #b9b2a7; font-size: .72rem; text-decoration: underline; text-underline-offset: .25em; cursor: pointer; }
+.consent.is-expandido .consent__link { display: block; }
 .consent__link:hover { color: var(--bronze-light); }
 
 /* Painel de preferências */
@@ -1249,20 +1299,29 @@ body.esta-carregando { overflow: hidden; }
 @media (max-width: 620px) {
   /* Acima do botão flutuante do WhatsApp: os dois moram no canto de baixo, e o
      banner sai da tela em alguns segundos enquanto o outro fica. */
-  .consent { right: .75rem; bottom: .75rem; left: .75rem; padding: 1rem; }
+  /* No celular o card sobe para o topo: abaixo do cabecalho e ACIMA dos botoes
+     da hero, que sao o unico elemento da pagina que nao pode ser tapado. Cobre
+     parte do titulo por alguns segundos — o titulo se le de novo ao fechar o
+     aviso, o clique perdido nao volta. */
+  .consent {
+    right: auto;
+    top: auto;
+    bottom: .75rem;
+    left: .75rem;
+    width: min(320px, calc(100vw - 1.5rem));
+    padding: .8rem .9rem;
+    transform: translateX(calc(-100% - 1.25rem));
+  }
   /* O ícone sai da coluna e vai para a linha do título: empilhado, ele sozinho
      numa linha custaria altura numa caixa que já ocupa o pé da tela. */
-  .consent { gap: .75rem 1rem; }
+  .consent { gap: .7rem; }
   .consent__icone { width: 22px; height: 22px; }
-  .consent__corpo { flex-basis: calc(100% - 2.8rem); }
   .consent__texto { font-size: .74rem; }
   /* Os dois botões dividem a linha e "Personalizar" desce para a sua própria,
      centralizado: os três na mesma linha dariam três alvos estreitos demais para
      o polegar, e é o link — não a recusa — que pode esperar a segunda linha. */
-  .consent__acoes { width: 100%; flex-wrap: wrap; }
-  .consent__acoes .liquid-button { flex: 1; min-width: 0; }
-  .consent__link { order: 1; width: 100%; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   .consent { transition: opacity .2s linear, visibility .2s; transform: none; }
+  .consent:not(.is-visivel) { transform: none; }
 }
