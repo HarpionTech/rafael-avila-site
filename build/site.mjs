@@ -330,8 +330,34 @@ async function atomicWrite(file, bytes) {
   return true;
 }
 
+/* HTML servido nao leva comentario.
+   ==========================================================================
+   CSS e JS podem ser comentados a vontade: o build os minifica e o comentario
+   fica pelo caminho. O HTML nao passa por isso — ele vai para o ar exatamente
+   como esta escrito, e todo comentario aparece para quem abrir o codigo-fonte
+   da pagina. Ja saiu daqui, publicado, a explicacao de como o consentimento
+   controla o carregamento do Google e da Meta.
+
+   Documentacao de decisao do HTML vive em build/NOTAS-HTML.md.
+   Passam apenas os marcadores que o proprio build consome. */
+const MARCADORES_PERMITIDOS = new Set(['seo:inicio', 'seo:fim']);
+
+function recusaComentariosNoHtml(nome, html) {
+  const encontrados = [...html.matchAll(/<!--([\s\S]*?)-->/g)]
+    .map((m) => m[1].replace(/\s+/g, ' ').trim())
+    .filter((t) => !MARCADORES_PERMITIDOS.has(t));
+  if (!encontrados.length) return;
+  const lista = encontrados
+    .map((t) => '    - ' + t.slice(0, 90) + (t.length > 90 ? '...' : ''))
+    .join('\n');
+  throw new Error(
+    '[build] ' + nome + ' tem ' + encontrados.length + ' comentario(s) que iriam para o ar:\n' + lista + '\n' +
+    '  Mova a explicacao para build/NOTAS-HTML.md, ou para o .js/.css do assunto (esses sao minificados).');
+}
+
 async function writeBuild() {
   const build = await computeBuild();
+  for (const [nome, bytes] of build.htmlOutputs) recusaComentariosNoHtml(nome, bytes.toString('utf8'));
   await cleanBuild();
   for (const [name, bytes] of build.outputs) await atomicWrite(absolutePath(name), bytes);
   for (const [name, bytes] of build.htmlOutputs) await atomicWrite(absolutePath(name), bytes);
