@@ -346,6 +346,12 @@ function recusaComentariosNoHtml(nome, html) {
   const encontrados = [...html.matchAll(/<!--([\s\S]*?)-->/g)]
     .map((m) => m[1].replace(/\s+/g, ' ').trim())
     .filter((t) => !MARCADORES_PERMITIDOS.has(t));
+  // Comentario de JavaScript dentro de <script> inline vai para o ar igual ao
+  // comentario de HTML: o arquivo nao passa por minificacao. So os <script>
+  // COM src viram .min.js; os inline seguem literais.
+  const inline = [...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)]
+    .flatMap((m) => [...m[1].matchAll(/\/\*([\s\S]*?)\*\//g)].map((c) => c[1].replace(/\s+/g, ' ').trim()));
+  encontrados.push(...inline);
   if (!encontrados.length) return;
   const lista = encontrados
     .map((t) => '    - ' + t.slice(0, 90) + (t.length > 90 ? '...' : ''))

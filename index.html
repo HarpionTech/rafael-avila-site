@@ -82,23 +82,8 @@
   <script>
     (() => {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      /* Quem chega de anuncio nao ve a cortina.
-
-         Ela custa de 6 a 9 segundos ate a primeira palavra sobre terapia (piso
-         de 2,5 s + espera do livro 3D + 1,7 s de abertura). Para quem chega pelo
-         link normal isso e a assinatura da pagina; para quem veio de clique pago
-         e a diferenca entre ler a oferta e desistir antes dela. O anuncio direto
-         para o WhatsApp abre a conversa em zero segundo — a pagina nao pode
-         competir com isso cobrando nove.
-
-         A marca do clique pago esta sempre na URL: gclid/gbraid/wbraid e
-         gad_source no Google, fbclid no Meta, msclkid no Bing, alem dos utm_*. */
       const VEIO_DE_ANUNCIO = /[?&](gclid|gbraid|wbraid|gad_source|gad_campaignid|fbclid|msclkid|utm_source|utm_medium|utm_campaign|utm_id)=/i;
       if (VEIO_DE_ANUNCIO.test(location.search)) {
-        /* A cortina ainda nao foi lida pelo parser neste ponto, entao quem a
-           remove e o script logo abaixo dela. Aqui so nao se liga o interruptor:
-           sem .preloader-capable o CSS ja a mantem em display:none, e nao existe
-           instante em que ela aparece. */
         window.__semCortina = true;
         return;
       }
@@ -137,9 +122,6 @@
     <span class="preloader__luz" aria-hidden="true"></span>
   </div>
   <script>
-    /* Precisa rodar DEPOIS da cortina existir e ANTES de main.js (que e defer, e
-       so executa com o documento inteiro lido). A hero fica pausada enquanto
-       [data-preloader] estiver no DOM — nao basta esconder, tem de sair. */
     if (window.__semCortina) document.querySelector('[data-preloader]')?.remove();
   </script>
 

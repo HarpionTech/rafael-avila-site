@@ -59,3 +59,16 @@ Só o ícone. Sem texto visível, o rótulo acessível tem de vir do aria-label:
 ### `<script defer src="assets/build/tracking.min.js?v=d9b8fda82e34"></script>`
 
 Depois do main.js porque depende do módulo de consentimento que ele publica. Não carrega Google nem Meta por conta própria: pede permissão e espera — com os IDs vazios no config, fica inerte.
+
+## Scripts inline
+
+Estes comentarios viviam dentro das tags `<script>` do HTML. Comentario de
+JavaScript inline vai para o ar igual ao comentario de HTML — o arquivo nao
+passa por minificacao.
+
+- Quem chega de anuncio nao ve a cortina. Ela custa de 6 a 9 segundos ate a primeira palavra sobre terapia (piso de 2,5 s + espera do livro 3D + 1,7 s de abertura). Para quem chega pelo link normal isso e a assinatura da pagina; para quem veio de clique pago e a diferenca entre ler a oferta e desistir antes dela. O anuncio direto para o WhatsApp abre a conversa em zero segundo — a pagina nao pode competir com isso cobrando nove. A marca do clique pago esta sempre na URL: gclid/gbraid/wbraid e gad_source no Google, fbclid no Meta, msclkid no Bing, alem dos utm_*.
+
+- A cortina ainda nao foi lida pelo parser neste ponto, entao quem a remove e o script logo abaixo dela. Aqui so nao se liga o interruptor: sem .preloader-capable o CSS ja a mantem em display:none, e nao existe instante em que ela aparece.
+
+- Precisa rodar DEPOIS da cortina existir e ANTES de main.js (que e defer, e so executa com o documento inteiro lido). A hero fica pausada enquanto [data-preloader] estiver no DOM — nao basta esconder, tem de sair.
+
