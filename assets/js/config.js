@@ -14,8 +14,8 @@ window.CONFIG = {
     itens: [
       {
         id: 'mundo-real',
-        textura: 'assets/frente do livro fisico.jpeg',
-        contracapa: 'assets/capa do livro fisico.jpeg',
+        textura: 'assets/frente do livro fisico.webp',
+        contracapa: 'assets/capa do livro fisico.webp',
         lombadaTexto: {
           fundo: '#0a0a0b',
           corAutor: '#c9a05c',

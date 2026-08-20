@@ -1,102 +1,39 @@
-"""Traz as fontes do Google para dentro do projeto.
+"""Corta a faixa de PESO das fontes variaveis para a que a pagina usa.
 
-Enquanto o CSS aponta para fonts.googleapis.com, o navegador de CADA visitante
-abre conexao com o Google e entrega IP, User-Agent e a pagina de origem. Baixando
-os arquivos para ca, a fonte passa a vir do mesmo servidor do resto do site e
-esse terceiro some — o site fica sem nenhum host externo.
+Newsreader vem com o eixo wght de 200 a 800 e o eixo opsz de 6 a 72. A pagina
+usa 400, 500 e 600 — os outros 400 pontos de interpolacao viajam em toda visita
+sem nunca serem desenhados.
 
-Ganho junto: somem duas resolucoes de DNS e dois handshakes TLS que estavam no
-caminho critico. Texto nao pinta ate a fonte resolver, entao isso e LCP direto.
+O eixo opsz fica INTACTO de proposito. Fixa-lo levaria o arquivo de 129 KB para
+39 KB, mas muda o desenho: as letras engrossam de leve e o titulo passa a ocupar
+menos largura, o que pode mudar onde a headline quebra de linha. Isso e decisao
+de identidade visual, nao de performance — nao se toma dentro de um script de
+build.
 
-O truque do User-Agent: a API do Google devolve formatos diferentes conforme quem
-pergunta. Com UA de Chrome moderno ela responde woff2, que e o menor. Com UA
-generico volta ttf, varias vezes maior.
-
-Uso:
-  python build/fontes.py
+Os .woff2 originais ficam no repositorio: sao a fonte de qualquer reconversao.
 """
-import os
-import re
-import sys
-import urllib.request
+import os, shutil, subprocess, sys, tempfile
+from fontTools.ttLib import TTFont
 
-RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DESTINO = os.path.join(RAIZ, "assets", "fontes")
+PASTA = "assets/fontes"
+FAIXA = "wght=400:600"
 
-FAMILIAS = (
-    "https://fonts.googleapis.com/css2"
-    "?family=IBM+Plex+Sans:wght@400;500;600;700"
-    "&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600"
-    ";1,6..72,400;1,6..72,500"
-    "&display=swap"
-)
-
-UA_CHROME = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-             "(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36")
-
-
-def log(m):
-    print(f"[FONTES] {m}")
-    sys.stdout.flush()
-
-
-def baixa(url, ua=UA_CHROME):
-    req = urllib.request.Request(url, headers={"User-Agent": ua})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.read()
-
-
-def main():
-    os.makedirs(DESTINO, exist_ok=True)
-
-    css = baixa(FAMILIAS).decode("utf-8")
-    urls = sorted(set(re.findall(r"url\((https://[^)]+\.woff2)\)", css)))
-    if not urls:
-        raise SystemExit("[FONTES] o Google nao devolveu woff2 — confira o User-Agent")
-    log(f"{len(urls)} arquivos woff2 a baixar")
-
-    mapa = {}
-    total = 0
-    for u in urls:
-        # nome estavel a partir do caminho do Google: familia + hash do arquivo
-        nome = re.sub(r"[^a-zA-Z0-9._-]", "-", u.split("/s/")[-1]).lower()
-        dados = baixa(u)
-        with open(os.path.join(DESTINO, nome), "wb") as f:
-            f.write(dados)
-        mapa[u] = nome
-        total += len(dados)
-    log(f"{total/1024:.0f} KB baixados")
-
-    local = css
-    for u, nome in mapa.items():
-        local = local.replace(u, nome)
-
-    cabeca = (
-        "/* Gerado por build/fontes.py — nao editar a mao.\n"
-        "   Fontes servidas pelo proprio site: nenhum host externo, e o Google\n"
-        "   nao recebe o IP de quem visita. Para atualizar, rodar o script. */\n"
-    )
-    with open(os.path.join(DESTINO, "fontes.css"), "w", encoding="utf-8", newline="\n") as f:
-        f.write(cabeca + local)
-    log(f"assets/fontes/fontes.css ({len(local)/1024:.0f} KB)")
-
-    # troca o <link> do Google pelo local, e derruba os preconnect que sobram
-    alvo = os.path.join(RAIZ, "index.html")
-    html = open(alvo, encoding="utf-8").read()
-    antes = html
-
-    html = re.sub(r'\n *<link rel="preconnect" href="https://fonts\.(googleapis|gstatic)\.com"[^>]*>', "", html)
-    html = re.sub(
-        r'<link href="https://fonts\.googleapis\.com/css2[^"]*" rel="stylesheet">',
-        '<link rel="stylesheet" href="assets/fontes/fontes.css">',
-        html, count=1)
-
-    if html == antes:
-        log("index.html ja estava apontando para as fontes locais")
-    else:
-        open(alvo, "w", encoding="utf-8").write(html)
-        log("index.html: <link> do Google trocado pelo local, preconnect removidos")
-
-
-if __name__ == "__main__":
-    main()
+alvos = [a for a in os.listdir(PASTA) if a.startswith("newsreader") and a.endswith(".woff2")]
+antes = depois = 0
+for arq in sorted(alvos):
+    cam = os.path.join(PASTA, arq)
+    orig = os.path.join(PASTA, arq.replace(".woff2", ".original.woff2"))
+    if not os.path.exists(orig):          # guarda a fonte antes de mexer
+        shutil.copy(cam, orig)
+    a = os.path.getsize(orig)
+    tmp = os.path.join(tempfile.gettempdir(), "f.ttf")
+    r = subprocess.run([sys.executable, "-m", "fontTools.varLib.instancer", orig, FAIXA, "-o", tmp],
+                       capture_output=True, text=True)
+    if r.returncode:
+        print(f"  {arq[:44]}: FALHOU — {r.stderr.strip()[:60]}")
+        continue
+    f = TTFont(tmp); f.flavor = "woff2"; f.save(cam)
+    d = os.path.getsize(cam)
+    antes += a; depois += d
+    print(f"  {arq[:46]:<46} {a/1024:6.1f} -> {d/1024:6.1f} KB  (-{round((1-d/a)*100)}%)")
+print(f"\n  total Newsreader: {antes/1024:.0f} KB -> {depois/1024:.0f} KB  (-{round((1-depois/antes)*100)}%)")

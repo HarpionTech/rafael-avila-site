@@ -465,12 +465,22 @@
         return;
       }
       const im = new Image();
+      /* Prioridade baixa: contracapa e lombada so aparecem quando alguem gira o
+         livro. Sem isto elas competem em pe de igualdade com a foto da hero, que
+         e o que a pessoa esta olhando enquanto elas baixam. */
+      im.fetchPriority = 'low';
+      im.decoding = 'async';
       im.onload = () => { upload(im, unit); gl.uniform1f(flag, 1); draw(); };
       im.onerror = () => console.warn('[book3d] textura', fonte);
       im.src = fonte;
     };
 
     const img = new Image();
+    /* A capa tambem cede passagem. O livro entra depois dos botoes na ordem da
+       pagina; a foto da sala e o retrato da hero e que precisam chegar antes.
+       Medido: estas texturas eram as duas maiores transferencias do site. */
+    img.fetchPriority = 'low';
+    img.decoding = 'async';
     img.onload = () => {
       upload(img, 0);
       pronto = true;

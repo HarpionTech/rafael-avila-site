@@ -32,9 +32,9 @@
       "source": "assets/bg-5120.webp"
     },
     "assets/build/book-3d.min.js": {
-      "bytes": 11593,
+      "bytes": 11675,
       "emitted": "assets/build/book-3d.min.js",
-      "sha256": "0d17092000db",
+      "sha256": "8bfbfa9a2952",
       "source": "assets/js/book-3d.js"
     },
     "assets/build/brain-particles.min.js": {
@@ -46,13 +46,13 @@
     "assets/build/config.min.js": {
       "bytes": 2648,
       "emitted": "assets/build/config.min.js",
-      "sha256": "e9c3eb3eb2e1",
+      "sha256": "64b2c17489bb",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
       "bytes": 13844,
       "emitted": "assets/build/fonts.min.css",
-      "sha256": "eb84cae3069d",
+      "sha256": "7e74e140f3bc",
       "source": "assets/fontes/fontes.css"
     },
     "assets/build/main.min.js": {
@@ -78,6 +78,12 @@
       "emitted": "assets/capa do livro fisico.jpeg",
       "sha256": "fe2709142ca6",
       "source": "assets/capa do livro fisico.jpeg"
+    },
+    "assets/capa do livro fisico.webp": {
+      "bytes": 100678,
+      "emitted": "assets/capa do livro fisico.webp",
+      "sha256": "69b00158ec05",
+      "source": "assets/capa do livro fisico.webp"
     },
     "assets/depoimento-1.webp": {
       "bytes": 91280,
@@ -146,39 +152,39 @@
       "source": "assets/fontes/ibmplexsans-v23-zyxzkvelmyyaje8bplhncwdkr932-g7dytd-dmu1syxtkybaba.woff2"
     },
     "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk4397yja.woff2": {
-      "bytes": 132000,
+      "bytes": 92344,
       "emitted": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk4397yja.woff2",
-      "sha256": "6e4f2958c3a7",
+      "sha256": "ce78ff1f7ccd",
       "source": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk4397yja.woff2"
     },
     "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439dyjjbg.woff2": {
-      "bytes": 86608,
+      "bytes": 59188,
       "emitted": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439dyjjbg.woff2",
-      "sha256": "45683de03de3",
+      "sha256": "88d3e2f1dde4",
       "source": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439dyjjbg.woff2"
     },
     "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439hyjjbg.woff2": {
-      "bytes": 27248,
+      "bytes": 19104,
       "emitted": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439hyjjbg.woff2",
-      "sha256": "6d0543f06b9d",
+      "sha256": "25cdba036347",
       "source": "assets/fontes/newsreader-v26-cy9afjocx1hbuyalurk439hyjjbg.woff2"
     },
     "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgihcfpy.woff2": {
-      "bytes": 95540,
+      "bytes": 65004,
       "emitted": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgihcfpy.woff2",
-      "sha256": "bb24f6648f75",
+      "sha256": "cd16edc2e242",
       "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgihcfpy.woff2"
     },
     "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgyhcfpy.woff2": {
-      "bytes": 27904,
+      "bytes": 19476,
       "emitted": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgyhcfpy.woff2",
-      "sha256": "0c22099dbcb3",
+      "sha256": "3af10fbc0589",
       "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcgyhcfpy.woff2"
     },
     "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2": {
-      "bytes": 146872,
+      "bytes": 102524,
       "emitted": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2",
-      "sha256": "5dfcd10d24af",
+      "sha256": "50154aece493",
       "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2"
     },
     "assets/frente do livro fisico.jpeg": {
@@ -186,6 +192,12 @@
       "emitted": "assets/frente do livro fisico.jpeg",
       "sha256": "a83335e4ab19",
       "source": "assets/frente do livro fisico.jpeg"
+    },
+    "assets/frente do livro fisico.webp": {
+      "bytes": 82490,
+      "emitted": "assets/frente do livro fisico.webp",
+      "sha256": "aee7897f0b05",
+      "source": "assets/frente do livro fisico.webp"
     },
     "assets/hero-1280.webp": {
       "bytes": 120254,
@@ -307,11 +319,11 @@
       "sha256": "1ada5ac3bf23",
       "source": "assets/preloader-2560.webp"
     },
-    "assets/terapia-online.jpg": {
-      "bytes": 185242,
-      "emitted": "assets/terapia-online.jpg",
-      "sha256": "d731b6976acd",
-      "source": "assets/terapia-online.jpg"
+    "assets/terapia-online.webp": {
+      "bytes": 86080,
+      "emitted": "assets/terapia-online.webp",
+      "sha256": "8084bf700221",
+      "source": "assets/terapia-online.webp"
     },
     "assets/vendor/ScrollTrigger.min.js": {
       "bytes": 43380,
