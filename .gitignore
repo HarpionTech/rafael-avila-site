@@ -28,3 +28,5 @@ textos_pra_colocar.md
 
 # fontes originais, guardadas para reconversao
 assets/fontes/*.original.woff2
+assets/livros/*.original.webp
+assets/*.original.webp

@@ -46,7 +46,7 @@
     "assets/build/config.min.js": {
       "bytes": 2648,
       "emitted": "assets/build/config.min.js",
-      "sha256": "64b2c17489bb",
+      "sha256": "33124ba75817",
       "source": "assets/js/config.js"
     },
     "assets/build/fonts.min.css": {
@@ -72,12 +72,6 @@
       "emitted": "assets/build/tracking.min.js",
       "sha256": "d9b8fda82e34",
       "source": "assets/js/tracking.js"
-    },
-    "assets/capa do livro fisico.jpeg": {
-      "bytes": 168289,
-      "emitted": "assets/capa do livro fisico.jpeg",
-      "sha256": "fe2709142ca6",
-      "source": "assets/capa do livro fisico.jpeg"
     },
     "assets/capa do livro fisico.webp": {
       "bytes": 100678,
@@ -187,12 +181,6 @@
       "sha256": "50154aece493",
       "source": "assets/fontes/newsreader-v26-cy9cfjocx1hbuyalurk439vcjohc.woff2"
     },
-    "assets/frente do livro fisico.jpeg": {
-      "bytes": 141899,
-      "emitted": "assets/frente do livro fisico.jpeg",
-      "sha256": "a83335e4ab19",
-      "source": "assets/frente do livro fisico.jpeg"
-    },
     "assets/frente do livro fisico.webp": {
       "bytes": 82490,
       "emitted": "assets/frente do livro fisico.webp",
@@ -242,51 +230,51 @@
       "source": "assets/livros/3d-mundo-real.webp"
     },
     "assets/livros/lombada-mentalidade.webp": {
-      "bytes": 82804,
+      "bytes": 70178,
       "emitted": "assets/livros/lombada-mentalidade.webp",
-      "sha256": "1b291c1b0fcf",
+      "sha256": "c7b18c4623d1",
       "source": "assets/livros/lombada-mentalidade.webp"
     },
     "assets/livros/mock-autoterapia.webp": {
-      "bytes": 151248,
+      "bytes": 61868,
       "emitted": "assets/livros/mock-autoterapia.webp",
-      "sha256": "3c8fb15bb1ec",
+      "sha256": "c3ed8ade1ffa",
       "source": "assets/livros/mock-autoterapia.webp"
     },
     "assets/livros/mock-mentalidade.webp": {
-      "bytes": 248500,
+      "bytes": 72300,
       "emitted": "assets/livros/mock-mentalidade.webp",
-      "sha256": "6a6b49e63d73",
+      "sha256": "f7fbee36a733",
       "source": "assets/livros/mock-mentalidade.webp"
     },
     "assets/livros/mock-relacionamentos.webp": {
-      "bytes": 211768,
+      "bytes": 80818,
       "emitted": "assets/livros/mock-relacionamentos.webp",
-      "sha256": "8383ab556263",
+      "sha256": "e9c60a2c4be1",
       "source": "assets/livros/mock-relacionamentos.webp"
     },
     "assets/livros/plana-autoconfianca.webp": {
-      "bytes": 386518,
+      "bytes": 104540,
       "emitted": "assets/livros/plana-autoconfianca.webp",
-      "sha256": "fb727ca9e3d7",
+      "sha256": "17fe3e64888a",
       "source": "assets/livros/plana-autoconfianca.webp"
     },
     "assets/livros/plana-autoterapia.webp": {
-      "bytes": 199022,
+      "bytes": 59512,
       "emitted": "assets/livros/plana-autoterapia.webp",
-      "sha256": "ca52519c2ddd",
+      "sha256": "911f18cd25c8",
       "source": "assets/livros/plana-autoterapia.webp"
     },
     "assets/livros/plana-mentalidade.webp": {
-      "bytes": 153590,
+      "bytes": 48712,
       "emitted": "assets/livros/plana-mentalidade.webp",
-      "sha256": "13376af3d4fa",
+      "sha256": "dbb965226031",
       "source": "assets/livros/plana-mentalidade.webp"
     },
     "assets/livros/plana-relacionamentos.webp": {
-      "bytes": 131556,
+      "bytes": 49458,
       "emitted": "assets/livros/plana-relacionamentos.webp",
-      "sha256": "105315876e93",
+      "sha256": "2678aa99b181",
       "source": "assets/livros/plana-relacionamentos.webp"
     },
     "assets/perfil-1254.webp": {

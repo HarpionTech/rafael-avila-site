@@ -24,16 +24,41 @@ const ALVOS = [
   { origem: 'assets/frente do livro fisico.jpeg', largura: 768,  qualidade: 80 },
   // Exibida a 329 px CSS num celular com DPR 3 = 988 px efetivos; 1080 cobre.
   { origem: 'assets/terapia-online.jpg',          largura: 1080, qualidade: 82 },
+
+  /* Vitrine. As `plana-*` sao textura do canvas da vitrine, cujo buffer tem
+     ~800 px — e a face do livro ocupa so parte dele, em perspectiva. Na hero o
+     mesmo padrao ja se provou: canvas de 1680 px com textura de 768 (proporcao
+     0,46) sem perda visivel. Aqui 640 px sobre um canvas de 800 e proporcao
+     0,8: bem mais folgado do que o que ja funciona. */
+  { origem: 'assets/livros/plana-autoconfianca.webp',   largura: 640, qualidade: 82 },
+  { origem: 'assets/livros/plana-autoterapia.webp',     largura: 640, qualidade: 82 },
+  { origem: 'assets/livros/plana-mentalidade.webp',     largura: 640, qualidade: 82 },
+  { origem: 'assets/livros/plana-relacionamentos.webp', largura: 640, qualidade: 82 },
+
+  /* Mockups em <img>. Medidos no celular com DPR 3, que e o caso exigente:
+     546 px efetivos para relacionamentos e autoterapia, 156 para mentalidade.
+     640 cobre os dois primeiros com folga; mentalidade cabe em 480 e ainda
+     sobra o dobro do necessario. */
+  { origem: 'assets/livros/mock-relacionamentos.webp', largura: 640, qualidade: 82 },
+  { origem: 'assets/livros/mock-autoterapia.webp',     largura: 640, qualidade: 82 },
+  { origem: 'assets/livros/mock-mentalidade.webp',     largura: 480, qualidade: 82 },
 ];
 
 let antes = 0, depois = 0;
 for (const { origem, largura, qualidade } of ALVOS) {
   const destino = origem.replace(/\.jpe?g$/i, '.webp');
-  const buf = await readFile(origem);
+  /* Arquivo que ja nasce .webp seria sobrescrito por si mesmo, e a fonte se
+     perderia na primeira execucao. Guarda o original ao lado, uma unica vez. */
+  let fonte = origem;
+  if (destino === origem) {
+    fonte = origem.replace(/\.webp$/i, '.original.webp');
+    try { await stat(fonte); } catch { await writeFile(fonte, await readFile(origem)); }
+  }
+  const buf = await readFile(fonte);
   const img = sharp(buf);
   const meta = await img.metadata();
   await writeFile(destino, await img.resize({ width: largura }).webp({ quality: qualidade, effort: 6 }).toBuffer());
-  const a = (await stat(origem)).size, d = (await stat(destino)).size;
+  const a = (await stat(fonte)).size, d = (await stat(destino)).size;
   antes += a; depois += d;
   console.log(`  ${origem.split('/').pop()}`);
   console.log(`    ${meta.width}x${meta.height}  ${(a/1024).toFixed(0)} KB -> ${(d/1024).toFixed(0)} KB  (-${Math.round((1-d/a)*100)}%)`);
