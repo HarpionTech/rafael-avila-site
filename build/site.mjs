@@ -7,7 +7,7 @@ import { transform } from 'esbuild';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUILD_DIR = path.join(ROOT, 'assets', 'build');
 const MANIFEST_PATH = path.join(ROOT, 'build', 'asset-manifest.json');
-const HTML_FILES = ['index.html', 'politica.html'];
+const HTML_FILES = ['index.html', 'politica.html', '404.html'];
 const CSS_INPUTS = [
   ['assets/fontes/fontes.css', 'assets/build/fonts.min.css'],
   ['assets/css/style.css', 'assets/build/site.min.css'],

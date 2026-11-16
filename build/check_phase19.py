@@ -428,7 +428,7 @@ def versioning_checks() -> list[str]:
     failures: list[str] = []
     manifest = load_asset_manifest()
     assets = manifest["assets"]
-    for html_name in ("index.html", "politica.html"):
+    for html_name in ("index.html", "politica.html", "404.html"):
         html = (ROOT / html_name).read_text(encoding="utf-8")
         if "?v=2026" in html:
             failures.append(f"{html_name}: timestamp manual remanescente")
@@ -478,7 +478,7 @@ def versioning_checks() -> list[str]:
 
 
 def reproducibility_snapshot() -> dict[str, str]:
-    allowlist = [ROOT / "build" / "asset-manifest.json", ROOT / "index.html", ROOT / "politica.html"]
+    allowlist = [ROOT / "build" / "asset-manifest.json", ROOT / "index.html", ROOT / "politica.html", ROOT / "404.html"]
     allowlist.extend(sorted((ROOT / "assets" / "build").rglob("*")))
     return {
         relative(path): sha256_file(path)

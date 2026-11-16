@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Página não encontrada — Rafael Ávila</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0b0b0c">
+  <link rel="icon" href="data:,">
+
+  <link rel="stylesheet" href="assets/build/fonts.min.css?v=7e74e140f3bc">
+  <link rel="stylesheet" href="assets/build/site.min.css?v=6cea28b03e47">
+  <style>
+    body { background: #0b0b0c; }
+    .doc { max-width: 720px; min-height: 100vh; min-height: 100dvh; margin-inline: auto; padding: clamp(2.5rem, 7vw, 5rem) var(--gutter); display: flex; flex-direction: column; justify-content: center; }
+    .doc__codigo { margin: 0 0 1rem; color: var(--bronze-light); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+    .doc h1 { margin: 0 0 1rem; color: var(--white); font-family: var(--serif); font-size: clamp(1.9rem, 5vw, 2.8rem); font-weight: 400; line-height: 1.1; }
+    .doc p.doc__texto { margin: 0 0 2.2rem; color: #b9b2a7; font-size: .92rem; line-height: 1.7; }
+    .doc__acao { align-self: flex-start; display: inline-flex; min-height: 50px; align-items: center; gap: .55rem; padding: .75rem 1.15rem; border-radius: 999px; border: 1px solid rgba(226,200,143,.45); background: linear-gradient(180deg, #e6cd95, #c9a765); color: #17130a; font-size: .72rem; font-weight: 700; text-decoration: none; transition: transform .18s ease; }
+    .doc__acao:hover { transform: translateY(-2px); }
+    .doc__acao:focus-visible { outline: 2px solid var(--bronze-light); outline-offset: 3px; }
+    .doc__acao svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @media (prefers-reduced-motion: reduce) { .doc__acao { transition: none; } .doc__acao:hover { transform: none; } }
+  </style>
+</head>
+<body>
+  <main class="doc">
+    <p class="doc__codigo">Erro 404</p>
+    <h1>Página não encontrada</h1>
+    <p class="doc__texto">O endereço que você abriu não existe ou mudou de lugar.</p>
+    <a class="doc__acao" href="/terapia">
+      <span>Ir para o site</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m0 0-6-6m6 6-6 6"/></svg>
+    </a>
+  </main>
+</body>
+</html>

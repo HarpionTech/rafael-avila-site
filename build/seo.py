@@ -27,7 +27,7 @@ SOCIAL_ALT = "Rafael Ávila, terapeuta comportamental, em retrato editorial."
 # competir com a home por relevancia.
 PAGINAS = [
     (LANDING_PATH, "1.0", "monthly"),
-    ("/politica.html", "0.3", "yearly"),
+    ("/politica", "0.3", "yearly"),
 ]
 
 INSTAGRAM = "https://www.instagram.com/rafa.aviila/"
